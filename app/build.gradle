@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'org.springframework.boot' version '3.2.2'
 }
 
 group = 'io.github._127_0_0_l'
@@ -10,6 +11,8 @@ repositories {
 }
 
 dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+
     implementation project(':core')
     implementation project(':infra-db')
     implementation project(':infra-tg-bot')
