@@ -11,14 +11,15 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter'
-
     implementation project(':core')
     implementation project(':infra-db')
     implementation project(':infra-tg-bot')
     implementation project(':infra-http-client')
     implementation project(':infra-parser')
     implementation project(':infra-scheduler')
+
+    implementation 'org.springframework.boot:spring-boot-starter'
+
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

@@ -3,10 +3,12 @@ package io.github._127_0_0_l.services;
 import io.github._127_0_0_l.models.Site;
 import io.github._127_0_0_l.ports.out.HtmlProviderPort;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 
+@Slf4j
 @Service
 public class HtmlProviderService {
     private final HtmlProviderPort provider;
@@ -20,5 +22,6 @@ public class HtmlProviderService {
         String html = provider.getHtml(site);
         PrintStream out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
         out.println(html);
+        log.info("Hello logs!!!");
     }
 }
