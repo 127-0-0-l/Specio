@@ -1,7 +1,11 @@
 package io.github._127_0_0_l.services;
 
+import io.github._127_0_0_l.models.Site;
 import io.github._127_0_0_l.ports.out.HtmlProviderPort;
 import org.springframework.stereotype.Service;
+
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 
 @Service
 public class HtmlProviderService {
@@ -12,8 +16,9 @@ public class HtmlProviderService {
     }
 
     public void showHtml(){
-        String url = "https://google.com";
-        String html = provider.getHtml(url);
-        System.err.println(html);
+        Site site = new Site(0, "google", "https://google.com");
+        String html = provider.getHtml(site);
+        PrintStream out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
+        out.println(html);
     }
 }
