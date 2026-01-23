@@ -11,15 +11,19 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 @Service
 public class HtmlProviderService {
-    private final HtmlProviderPort provider;
+    private final HtmlProviderPort htmlProvider;
 
     public HtmlProviderService (HtmlProviderPort provider){
-        this.provider = provider;
+        this.htmlProvider = provider;
+    }
+
+    public String getHtml(Site site){
+        return htmlProvider.getHtml(site);
     }
 
     public void showHtml(){
         Site site = new Site(0, "google", "https://google.com");
-        String html = provider.getHtml(site);
+        String html = htmlProvider.getHtml(site);
         PrintStream out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
         out.println(html);
         log.info("Hello logs!!!");
