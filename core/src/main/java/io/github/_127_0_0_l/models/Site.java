@@ -1,7 +1,8 @@
 package io.github._127_0_0_l.models;
 
+import java.util.List;
+
 public record Site(
-        int id,
         String name,
-        String url
+        String pageUrl
 ) { }
