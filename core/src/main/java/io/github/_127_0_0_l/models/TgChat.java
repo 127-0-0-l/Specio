@@ -1,8 +1,6 @@
 package io.github._127_0_0_l.models;
 
-import java.util.List;
-
-public record User (
+public record TgChat(
         int chatId,
         boolean isActive,
         ChatState state,
