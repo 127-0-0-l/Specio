@@ -1,24 +1,11 @@
-plugins {
-    id 'java'
-}
-
 group = 'io.github._127_0_0_l'
 version = '1.0-SNAPSHOT'
-
-repositories {
-    mavenCentral()
-}
 
 dependencies {
     implementation project(":core")
 
-    implementation 'org.springframework.boot:spring-boot-starter'
-
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
-
-test {
-    useJUnitPlatform()
+    implementation 'org.jsoup:jsoup:1.16.1'
+    implementation 'org.mapstruct:mapstruct:1.6.3'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.19.2'
 }

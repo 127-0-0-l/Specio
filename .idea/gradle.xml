@@ -11,8 +11,8 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/core" />
+            <option value="$PROJECT_DIR$/infra-content-provider" />
             <option value="$PROJECT_DIR$/infra-db" />
-            <option value="$PROJECT_DIR$/infra-http-client" />
             <option value="$PROJECT_DIR$/infra-parser" />
             <option value="$PROJECT_DIR$/infra-scheduler" />
             <option value="$PROJECT_DIR$/infra-tg-bot" />
