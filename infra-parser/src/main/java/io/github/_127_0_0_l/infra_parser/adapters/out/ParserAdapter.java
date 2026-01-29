@@ -8,14 +8,10 @@ import io.github._127_0_0_l.infra_parser.interfaces.HtmlParser;
 import io.github._127_0_0_l.core.models.VehicleAdvert;
 import io.github._127_0_0_l.core.ports.out.ParserPort;
 import io.github._127_0_0_l.core.ports.out.db.ParserConfigPort;
-import io.github._127_0_0_l.infra_parser.models.ContentType;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Component
 public class ParserAdapter implements ParserPort {
@@ -46,7 +42,7 @@ public class ParserAdapter implements ParserPort {
 
     private List<VehicleAdvert> toVehicleAdvert(String json){
         ObjectMapper mapper = new ObjectMapper();
-        VehicleAdvert[] array = null;
+        VehicleAdvert[] array;
 
         try {
             array = mapper.readValue(json, VehicleAdvert[].class);

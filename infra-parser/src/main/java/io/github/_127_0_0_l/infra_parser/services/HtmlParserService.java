@@ -23,8 +23,8 @@ public class HtmlParserService implements HtmlParser {
         ObjectMapper mapper = new ObjectMapper();
         Document document = Jsoup.parse(html, url);
 
-        if (config.selectors().size() == 1 && config.selectors().get(0).isMultiple()){
-            ArrayNode array = parseArray(document, config.selectors().get(0));
+        if (config.selectors().size() == 1 && config.selectors().getFirst().isMultiple()){
+            ArrayNode array = parseArray(document, config.selectors().getFirst());
             return array.toString();
         } else {
             ObjectNode object = mapper.createObjectNode();
@@ -35,7 +35,7 @@ public class HtmlParserService implements HtmlParser {
 
     private void fillRootNode(ObjectNode root, Element element, List<Selector> selectors){
         for (var s : selectors){
-            root.put(s.fieldName(), parseNode(element, s));
+            root.set(s.fieldName(), parseNode(element, s));
         }
     }
 
@@ -79,13 +79,10 @@ public class HtmlParserService implements HtmlParser {
     }
 
     private String getValue(Element element, ContentType contentType){
-        switch (contentType){
-            case ContentType.TEXT:
-                return element.text();
-            case ContentType.HREF:
-                return element.attr("abs:href");
-            default:
-                return "";
-        }
+        return switch (contentType) {
+            case ContentType.TEXT -> element.text();
+            case ContentType.HREF -> element.attr("abs:href");
+            default -> "";
+        };
     }
 }
