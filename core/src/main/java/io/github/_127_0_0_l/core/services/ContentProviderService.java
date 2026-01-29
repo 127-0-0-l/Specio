@@ -12,9 +12,13 @@ import java.nio.charset.StandardCharsets;
 @Service
 public class ContentProviderService {
     private final ContentProviderPort contentProvider;
+    private final ParserService parserService;
 
-    public ContentProviderService(ContentProviderPort contentProvider){
+    public ContentProviderService(
+            ContentProviderPort contentProvider,
+            ParserService parserService){
         this.contentProvider = contentProvider;
+        this.parserService = parserService;
     }
 
     public String getContent(ContentSource source){
@@ -25,7 +29,10 @@ public class ContentProviderService {
         ContentSource source = new ContentSource("google", "https://google.com");
         String content = contentProvider.getContent(source.name());
         PrintStream out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
-        out.println(content);
-        log.info("Hello logs!!!");
+//        out.println(content);
+        var result = parserService.parse(source.name(), content);
+        for (var item : result){
+            out.println(item);
+        }
     }
 }

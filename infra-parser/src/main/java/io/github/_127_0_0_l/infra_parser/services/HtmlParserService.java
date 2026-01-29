@@ -14,21 +14,23 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
 
 @Slf4j
 @Component
 public class HtmlParserService implements HtmlParser {
-    public String parse(String html, HtmlParserConfig config){
+    public String parse(String url, String html, HtmlParserConfig config){
         ObjectMapper mapper = new ObjectMapper();
-        ObjectNode root = mapper.createObjectNode();
+        Document document = Jsoup.parse(html, url);
 
-        Document document = Jsoup.parse(html);
-
-        fillRootNode(root, document, config.selectors());
-
-        return root.toString();
+        if (config.selectors().size() == 1 && config.selectors().get(0).isMultiple()){
+            ArrayNode array = parseArray(document, config.selectors().get(0));
+            return array.toString();
+        } else {
+            ObjectNode object = mapper.createObjectNode();
+            fillRootNode(object, document, config.selectors());
+            return object.toString();
+        }
     }
 
     private void fillRootNode(ObjectNode root, Element element, List<Selector> selectors){
@@ -61,22 +63,19 @@ public class HtmlParserService implements HtmlParser {
         return arrayNode;
     }
 
-    private ObjectNode parseObject(Element element, Selector selector){
-        ObjectNode localRoot = new ObjectMapper().createObjectNode();
-        Element e = element.selectFirst(selector.selector());
+    private JsonNode parseObject(Element element, Selector selector){
+        Element parsed = element.selectFirst(selector.selector());
+
+        if (parsed == null)
+            return new ObjectMapper().getNodeFactory().textNode("");
 
         if (selector.hasInnerSelectors()){
-            fillRootNode(localRoot, e, selector.innerSelectors());
+            ObjectNode localRoot = new ObjectMapper().createObjectNode();
+            fillRootNode(localRoot, parsed, selector.innerSelectors());
+            return localRoot;
         } else {
-            localRoot.put(selector.fieldName(), parseValue(element, selector));
+            return new ObjectMapper().getNodeFactory().textNode(getValue(parsed, selector.contentType()));
         }
-
-        return localRoot;
-    }
-
-    private String parseValue(Element element, Selector selector){
-        Element parsed = element.selectFirst(selector.selector());
-        return getValue(parsed, selector.contentType());
     }
 
     private String getValue(Element element, ContentType contentType){
