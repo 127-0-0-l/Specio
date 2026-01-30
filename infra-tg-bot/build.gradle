@@ -3,4 +3,7 @@ version = '1.0-SNAPSHOT'
 
 dependencies {
     implementation project(":core")
+
+    implementation 'org.telegram:telegrambots-springboot-longpolling-starter:7.10.0'
+    implementation 'org.telegram:telegrambots-client:7.10.0'
 }
