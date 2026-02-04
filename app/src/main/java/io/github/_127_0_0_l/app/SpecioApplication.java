@@ -10,7 +10,7 @@ public class SpecioApplication {
     public static void main(String[] args) {
         ApplicationContext context = SpringApplication.run(SpecioApplication.class, args);
 
-        ContentProviderService contentProviderService = context.getBean(ContentProviderService.class);
-        contentProviderService.showContent();
+//        ContentProviderService contentProviderService = context.getBean(ContentProviderService.class);
+//        contentProviderService.showContent();
     }
 }
