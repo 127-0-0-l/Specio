@@ -1,4 +1,4 @@
-package io.github._127_0_0_l.infra_tg_bot.models;
+package io.github._127_0_0_l.infra_tg_bot.services;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
