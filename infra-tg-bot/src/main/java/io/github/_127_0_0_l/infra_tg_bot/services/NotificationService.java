@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Queue;
 
 @Service
-public class NotificationService {
+public class NotificationService implements io.github._127_0_0_l.infra_tg_bot.interfaces.NotificationService {
     private final TelegramClient telegramClient;
 
     public NotificationService(TelegramClientProvider telegramClientProvider){
