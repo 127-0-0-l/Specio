@@ -1,0 +1,16 @@
+package io.github._127_0_0_l.infra_tg_bot.models;
+
+public enum ChatState {
+    INIT,
+    WAITING_FOR_FILTER_OPTION,
+    WAITING_FOR_PRICE_OPTION,
+    WAITING_FOR_PRICE_FROM,
+    WAITING_FOR_PRICE_TO,
+    WAITING_FOR_YEAR_OPTION,
+    WAITING_FOR_YEAR_FROM,
+    WAITING_FOR_YEAR_TO,
+    WAITING_FOR_REGION,
+    WAITING_FOR_CITY,
+    NOTIFYING,
+    IDLE
+}

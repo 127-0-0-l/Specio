@@ -23,16 +23,16 @@ public class NotificationService implements io.github._127_0_0_l.infra_tg_bot.in
         telegramClient = telegramClientProvider.getTelegramClient();
     }
 
-    public void Notify(long chatId, String text){
+    public void notify(long chatId, String text){
         SendMessage message = SendMessage.builder()
                 .chatId(chatId)
                 .text(text)
                 .build();
 
-        Notify(message);
+        notify(message);
     }
 
-    public void NotifyWithInlineButtons(long chatId, String text, List<Queue<ChatInlineButton>> chatButtonRows){
+    public void notifyWithInlineButtons(long chatId, String text, List<Queue<ChatInlineButton>> chatButtonRows){
         var markupBuilder = InlineKeyboardMarkup.builder();
 
         for (var chatButtonRow : chatButtonRows){
@@ -58,10 +58,10 @@ public class NotificationService implements io.github._127_0_0_l.infra_tg_bot.in
                 .replyMarkup(markup)
                 .build();
 
-        Notify(message);
+        notify(message);
     }
 
-    public void NotifyWithKeyboardButtons(long chatId, String text, List<Queue<ChatKeyboardButton>> chatButtonRows){
+    public void notifyWithKeyboardButtons(long chatId, String text, List<Queue<ChatKeyboardButton>> chatButtonRows){
         var replyMarkupBuilder = ReplyKeyboardMarkup.builder();
 
         for (var chatButtonRow : chatButtonRows){
@@ -74,7 +74,7 @@ public class NotificationService implements io.github._127_0_0_l.infra_tg_bot.in
             replyMarkupBuilder = replyMarkupBuilder.keyboardRow(row);
         }
 
-        ReplyKeyboardMarkup markup = replyMarkupBuilder.build();
+        ReplyKeyboardMarkup markup = replyMarkupBuilder.resizeKeyboard(true).build();
 
         SendMessage message = SendMessage.builder()
                 .chatId(chatId)
@@ -82,10 +82,10 @@ public class NotificationService implements io.github._127_0_0_l.infra_tg_bot.in
                 .replyMarkup(markup)
                 .build();
 
-        Notify(message);
+        notify(message);
     }
 
-    private void Notify(SendMessage message){
+    private void notify(SendMessage message){
         try {
             telegramClient.execute(message);
         } catch (TelegramApiException e) {

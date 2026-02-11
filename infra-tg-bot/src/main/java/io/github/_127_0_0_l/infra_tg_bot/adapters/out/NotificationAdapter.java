@@ -15,6 +15,6 @@ public class NotificationAdapter implements NotificationPort {
 
     @Override
     public void Notify(Notification notification) {
-        notificationService.Notify(notification.chatId(), notification.vehicleAdvert().toString());
+        notificationService.notify(notification.chatId(), notification.vehicleAdvert().toString());
     }
 }

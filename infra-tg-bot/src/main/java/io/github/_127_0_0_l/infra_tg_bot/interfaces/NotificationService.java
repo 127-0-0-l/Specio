@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.Queue;
 
 public interface NotificationService {
-    void Notify(long chatId, String text);
+    void notify(long chatId, String text);
 
-    void NotifyWithInlineButtons(long chatId, String text, List<Queue<ChatInlineButton>> chatButtonRows);
+    void notifyWithInlineButtons(long chatId, String text, List<Queue<ChatInlineButton>> chatButtonRows);
 
-    void NotifyWithKeyboardButtons(long chatId, String text, List<Queue<ChatKeyboardButton>> chatButtonRows);
+    void notifyWithKeyboardButtons(long chatId, String text, List<Queue<ChatKeyboardButton>> chatButtonRows);
 }
