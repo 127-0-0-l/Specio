@@ -1,8 +1,6 @@
 package io.github._127_0_0_l.infra_tg_bot.services;
 
-import io.github._127_0_0_l.infra_tg_bot.models.ChatInlineButton;
-import io.github._127_0_0_l.infra_tg_bot.models.ChatKeyboardButton;
-import io.github._127_0_0_l.infra_tg_bot.models.ChatState;
+import io.github._127_0_0_l.infra_tg_bot.models.*;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsumer;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -14,9 +12,10 @@ import java.util.*;
 public class UpdateHandler implements LongPollingUpdateConsumer {
     private final TelegramClient telegramClient;
     private final NotificationService notificationService;
-    private final List<String> regions = List.of("Minsk region", "Brest region");
-    private final List<String> cities = List.of("Minsk", "Brest", "Bobruisk");
-    private Map<Long, ChatState> chats = new HashMap<>();
+    private final List<String> regions = List.of("Minsk region", "Brest region", "Grodno region", "Vitebsk region",
+            "Gomel region", "Mogilev region");
+    private final List<String> cities = List.of("Minsk", "Brest", "Bobruisk", "Visokaye", "Kamenets", "Baranovichi");
+    private Map<Long, Chat> chats = new HashMap<>();
 
     public UpdateHandler(TelegramClientProvider telegramClientProvider,
                          NotificationService notificationService){
@@ -29,6 +28,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
         for (Update update : updates) {
             long chatId;
             String text;
+            int lastMessageId;
 
             if (update.hasMessage() && update.getMessage().hasText()) {
                 chatId = update.getMessage().getChatId();
@@ -36,6 +36,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
             } else if (update.hasCallbackQuery()){
                 chatId = update.getCallbackQuery().getMessage().getChatId();
                 text = update.getCallbackQuery().getData();
+                lastMessageId = update.getCallbackQuery().getMessage().getMessageId();
             } else {
                 continue;
             }
@@ -45,8 +46,8 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
     }
 
     private void handleMessage(long chatId, String text){
-        chats.putIfAbsent(chatId, ChatState.INIT);
-        ChatState state = chats.get(chatId);
+        chats.putIfAbsent(chatId, new Chat(chatId, ChatState.INIT, new Filters()));
+        ChatState state = chats.get(chatId).getState();
 
         switch (state){
             case ChatState.INIT -> handleInitCase(chatId, text);
@@ -80,7 +81,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
                 } else {
                     notificationService.notifyWithKeyboardButtons(chatId, "welcome", buttons);
                 }
-                chats.replace(chatId, ChatState.IDLE);
+                chats.get(chatId).setState(ChatState.IDLE);
                 break;
             default:
                 break;
@@ -96,7 +97,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
                 buttons.add(row);
                 notificationService.notifyWithKeyboardButtons(chatId, "start notifying", buttons);
                 // activate
-                chats.replace(chatId, ChatState.NOTIFYING);
+                chats.get(chatId).setState(ChatState.NOTIFYING);
                 break;
             case "set filters":
                 List<Queue<ChatInlineButton>> buttons1 = new ArrayList<>();
@@ -108,7 +109,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
                 row2.add(new ChatInlineButton("Year", "year"));
                 buttons1.add(row1);
                 buttons1.add(row2);
-                chats.replace(chatId, ChatState.WAITING_FOR_FILTER_OPTION);
+                chats.get(chatId).setState(ChatState.WAITING_FOR_FILTER_OPTION);
                 notificationService.notifyWithInlineButtons(
                         chatId, "current filters:\nchoose filter to set", buttons1);
                 break;
@@ -121,7 +122,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
         switch (text) {
             case "stop":
                 // deactivate
-                chats.replace(chatId, ChatState.IDLE);
+                chats.get(chatId).setState(ChatState.IDLE);
                 List<Queue<ChatKeyboardButton>> buttons = new ArrayList<>();
                 Queue<ChatKeyboardButton> row = new LinkedList<>();
                 row.add(new ChatKeyboardButton("run"));
@@ -148,7 +149,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
                 row5.add(new ChatInlineButton("submit", "submit"));
                 buttons.add(row5);
                 notificationService.notifyWithInlineButtons(chatId, "chose regions", buttons);
-                chats.replace(chatId, ChatState.WAITING_FOR_REGION);
+                chats.get(chatId).setState(ChatState.WAITING_FOR_REGION);
                 break;
             case "city":
                 for (String city : cities){
@@ -159,7 +160,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
                 Queue<ChatInlineButton> row6 = new LinkedList<>();
                 row6.add(new ChatInlineButton("submit", "submit"));
                 buttons.add(row6);
-                chats.replace(chatId, ChatState.WAITING_FOR_CITY);
+                chats.get(chatId).setState(ChatState.WAITING_FOR_CITY);
                 notificationService.notifyWithInlineButtons(chatId, "chose city", buttons);
                 break;
             case "price":
@@ -170,7 +171,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
                 row1.add(new ChatInlineButton("submit", "submit"));
                 buttons.add(row);
                 buttons.add(row1);
-                chats.replace(chatId, ChatState.WAITING_FOR_PRICE_OPTION);
+                chats.get(chatId).setState(ChatState.WAITING_FOR_PRICE_OPTION);
                 notificationService.notifyWithInlineButtons(chatId, "chose price option", buttons);
                 break;
             case "year":
@@ -181,7 +182,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
                 row4.add(new ChatInlineButton("submit", "submit"));
                 buttons.add(row3);
                 buttons.add(row4);
-                chats.replace(chatId, ChatState.WAITING_FOR_YEAR_OPTION);
+                chats.get(chatId).setState(ChatState.WAITING_FOR_YEAR_OPTION);
                 notificationService.notifyWithInlineButtons(chatId, "chose year options", buttons);
                 break;
             case "back":
@@ -190,7 +191,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
                 row2.add(new ChatKeyboardButton("run"));
                 row2.add(new ChatKeyboardButton("set filters"));
                 buttons1.add(row2);
-                chats.replace(chatId, ChatState.IDLE);
+                chats.get(chatId).setState(ChatState.IDLE);
                 notificationService.notifyWithKeyboardButtons(chatId, "", buttons1);
                 break;
             default:
@@ -207,14 +208,14 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
                 row.add(new ChatInlineButton("back", "back"));
                 buttons.add(row);
                 notificationService.notifyWithInlineButtons(chatId, "enter year_from", buttons);
-                chats.replace(chatId, ChatState.WAITING_FOR_YEAR_FROM);
+                chats.get(chatId).setState(ChatState.WAITING_FOR_YEAR_FROM);
                 break;
             case "year_to":
                 Queue<ChatInlineButton> row1 = new LinkedList<>();
                 row1.add(new ChatInlineButton("back", "back"));
                 buttons.add(row1);
                 notificationService.notifyWithInlineButtons(chatId, "enter year_to", buttons);
-                chats.replace(chatId, ChatState.WAITING_FOR_YEAR_TO);
+                chats.get(chatId).setState(ChatState.WAITING_FOR_YEAR_TO);
                 break;
             case "submit":
                 Queue<ChatInlineButton> row2 = new LinkedList<>();
@@ -225,7 +226,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
                 row3.add(new ChatInlineButton("Year", "year"));
                 buttons.add(row2);
                 buttons.add(row3);
-                chats.replace(chatId, ChatState.WAITING_FOR_FILTER_OPTION);
+                chats.get(chatId).setState(ChatState.WAITING_FOR_FILTER_OPTION);
                 notificationService.notifyWithInlineButtons(
                         chatId, "current filters:\nchoose filter to set", buttons);
                 break;
@@ -250,7 +251,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
             notificationService.notifyWithInlineButtons(chatId, "invalid value\nchose year options", buttons);
         }
 
-        chats.replace(chatId, ChatState.WAITING_FOR_YEAR_OPTION);
+        chats.get(chatId).setState(ChatState.WAITING_FOR_YEAR_OPTION);
     }
 
     private void handleWaitingForYearToCase(long chatId, String text){
@@ -271,7 +272,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
             notificationService.notifyWithInlineButtons(chatId, "invalid value\nchose year options", buttons);
         }
 
-        chats.replace(chatId, ChatState.WAITING_FOR_YEAR_OPTION);
+        chats.get(chatId).setState(ChatState.WAITING_FOR_YEAR_OPTION);
     }
 
     private void handleWaitingForPriceOptionCase(long chatId, String text){
@@ -283,14 +284,14 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
                 row.add(new ChatInlineButton("back", "back"));
                 buttons.add(row);
                 notificationService.notifyWithInlineButtons(chatId, "enter price_from", buttons);
-                chats.replace(chatId, ChatState.WAITING_FOR_PRICE_FROM);
+                chats.get(chatId).setState(ChatState.WAITING_FOR_PRICE_FROM);
                 break;
             case "price_to":
                 Queue<ChatInlineButton> row1 = new LinkedList<>();
                 row1.add(new ChatInlineButton("back", "back"));
                 buttons.add(row1);
                 notificationService.notifyWithInlineButtons(chatId, "enter price_to", buttons);
-                chats.replace(chatId, ChatState.WAITING_FOR_PRICE_TO);
+                chats.get(chatId).setState(ChatState.WAITING_FOR_PRICE_TO);
                 break;
             case "submit":
                 Queue<ChatInlineButton> row2 = new LinkedList<>();
@@ -301,7 +302,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
                 row3.add(new ChatInlineButton("Year", "year"));
                 buttons.add(row2);
                 buttons.add(row3);
-                chats.replace(chatId, ChatState.WAITING_FOR_FILTER_OPTION);
+                chats.get(chatId).setState(ChatState.WAITING_FOR_FILTER_OPTION);
                 notificationService.notifyWithInlineButtons(
                         chatId, "current filters:\nchoose filter to set", buttons);
                 break;
@@ -326,7 +327,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
             notificationService.notifyWithInlineButtons(chatId, "invalid value\nchose price options", buttons);
         }
 
-        chats.replace(chatId, ChatState.WAITING_FOR_PRICE_OPTION);
+        chats.get(chatId).setState(ChatState.WAITING_FOR_PRICE_OPTION);
     }
 
     private void handleWaitingForPriceToCase(long chatId, String text){
@@ -347,12 +348,12 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
             notificationService.notifyWithInlineButtons(chatId, "invalid value\nchose price options", buttons);
         }
 
-        chats.replace(chatId, ChatState.WAITING_FOR_PRICE_OPTION);
+        chats.get(chatId).setState(ChatState.WAITING_FOR_PRICE_OPTION);
     }
 
     private void handleWaitingForRegionCase(long chatId, String text){
         if (text.equals("submit")) {
-            chats.replace(chatId, ChatState.WAITING_FOR_FILTER_OPTION);
+            chats.get(chatId).setState(ChatState.WAITING_FOR_FILTER_OPTION);
 
             List<Queue<ChatInlineButton>> buttons1 = new ArrayList<>();
             Queue<ChatInlineButton> row1 = new LinkedList<>();
@@ -377,7 +378,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
 
     private void handleWaitingForCityCase(long chatId, String text){
         if (text.equals("submit")) {
-            chats.replace(chatId, ChatState.WAITING_FOR_FILTER_OPTION);
+            chats.get(chatId).setState(ChatState.WAITING_FOR_FILTER_OPTION);
 
             List<Queue<ChatInlineButton>> buttons1 = new ArrayList<>();
             Queue<ChatInlineButton> row1 = new LinkedList<>();
