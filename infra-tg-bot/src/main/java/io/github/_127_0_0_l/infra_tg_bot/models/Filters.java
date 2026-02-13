@@ -39,8 +39,44 @@ public class Filters {
         this.regions = regions;
     }
 
+    public void addRegion (String region){
+        regions.add(region);
+    }
+
+    public void removeRegion (String region) {
+        if (regions.contains(region)){
+            regions.remove(region);
+        }
+    }
+
+    public void toggleRegion (String region) {
+        if (regions.contains(region)) {
+            regions.remove(region);
+        } else {
+            regions.add(region);
+        }
+    }
+
     public void setCities (Set<String> cities){
         this.cities = cities;
+    }
+
+    public void addCity (String city){
+        cities.add(city);
+    }
+
+    public void removeCity (String city) {
+        if (cities.contains(city)){
+            cities.remove(city);
+        }
+    }
+
+    public void toggleCity (String city) {
+        if (cities.contains(city)) {
+            cities.remove(city);
+        } else {
+            cities.add(city);
+        }
     }
 
     public void setPriceFrom (int price){

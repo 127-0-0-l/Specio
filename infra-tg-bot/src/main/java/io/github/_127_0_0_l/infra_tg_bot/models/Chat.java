@@ -4,6 +4,7 @@ public class Chat {
     private final long id;
     private ChatState state;
     private Filters filters;
+    private int lastMessageId;
 
     public Chat (long id){
         this.id = id;
@@ -31,11 +32,19 @@ public class Chat {
         return filters;
     }
 
+    public int getLastMessageId(){
+        return lastMessageId;
+    }
+
     public void setState (ChatState state){
         this.state = state;
     }
 
     public void setFilters (Filters filters){
         this.filters = filters;
+    }
+
+    public void setLastMessageId(int messageId){
+        lastMessageId = messageId;
     }
 }

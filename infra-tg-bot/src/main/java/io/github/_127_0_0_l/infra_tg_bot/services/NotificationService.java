@@ -4,6 +4,8 @@ import io.github._127_0_0_l.infra_tg_bot.models.ChatInlineButton;
 import io.github._127_0_0_l.infra_tg_bot.models.ChatKeyboardButton;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -23,16 +25,16 @@ public class NotificationService implements io.github._127_0_0_l.infra_tg_bot.in
         telegramClient = telegramClientProvider.getTelegramClient();
     }
 
-    public void notify(long chatId, String text){
+    public int notify(long chatId, String text){
         SendMessage message = SendMessage.builder()
                 .chatId(chatId)
                 .text(text)
                 .build();
 
-        notify(message);
+        return notify(message);
     }
 
-    public void notifyWithInlineButtons(long chatId, String text, List<Queue<ChatInlineButton>> chatButtonRows){
+    public int notifyWithInlineButtons(long chatId, String text, List<Queue<ChatInlineButton>> chatButtonRows){
         var markupBuilder = InlineKeyboardMarkup.builder();
 
         for (var chatButtonRow : chatButtonRows){
@@ -58,10 +60,44 @@ public class NotificationService implements io.github._127_0_0_l.infra_tg_bot.in
                 .replyMarkup(markup)
                 .build();
 
-        notify(message);
+        return notify(message);
     }
 
-    public void notifyWithKeyboardButtons(long chatId, String text, List<Queue<ChatKeyboardButton>> chatButtonRows){
+    public void editWithInlineButtons(long chatId, int messageId, String text, List<Queue<ChatInlineButton>> chatButtonRows){
+        var markupBuilder = InlineKeyboardMarkup.builder();
+
+        for (var chatButtonRow : chatButtonRows){
+            var row = new InlineKeyboardRow();
+
+            for (var button : chatButtonRow){
+                var btn = InlineKeyboardButton.builder()
+                        .text(button.text())
+                        .callbackData(button.callbackData())
+                        .build();
+
+                row.add(btn);
+            }
+
+            markupBuilder = markupBuilder.keyboardRow(row);
+        }
+
+        InlineKeyboardMarkup markup = markupBuilder.build();
+
+        EditMessageText message = EditMessageText.builder()
+                .chatId(chatId)
+                .messageId(messageId)
+                .text(text)
+                .replyMarkup(markup)
+                .build();
+
+        try {
+            telegramClient.execute(message);
+        } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public int notifyWithKeyboardButtons(long chatId, String text, List<Queue<ChatKeyboardButton>> chatButtonRows){
         var replyMarkupBuilder = ReplyKeyboardMarkup.builder();
 
         for (var chatButtonRow : chatButtonRows){
@@ -82,12 +118,13 @@ public class NotificationService implements io.github._127_0_0_l.infra_tg_bot.in
                 .replyMarkup(markup)
                 .build();
 
-        notify(message);
+        return notify(message);
     }
 
-    private void notify(SendMessage message){
+    private int notify(SendMessage message){
         try {
-            telegramClient.execute(message);
+            var msg = telegramClient.execute(message);
+            return msg.getMessageId();
         } catch (TelegramApiException e) {
             throw new RuntimeException(e);
         }
