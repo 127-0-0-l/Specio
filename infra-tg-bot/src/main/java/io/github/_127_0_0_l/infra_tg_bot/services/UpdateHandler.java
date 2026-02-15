@@ -83,7 +83,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
                 } else {
                     messageId = notificationService.notifyWithKeyboardButtons(
                             chatId,
-                            "welcome back\n your last settings are:" + chats.get(chatId).getFilters().toString(),
+                            "welcome back\n your last settings are:\n" + chats.get(chatId).getFilters().toString(),
                             buttons);
                 }
                 chats.get(chatId).setState(ChatState.IDLE);

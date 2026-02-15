@@ -1,15 +1,18 @@
 package io.github._127_0_0_l.infra_tg_bot.models;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
 public class Filters {
+    private final Integer MIN_YEAR_VALUE = 1900;
     private Set<String> regions = new HashSet<>();
     private Set<String> cities = new HashSet<>();
-    private Integer priceFrom;
-    private Integer priceTo;
-    private Integer yearFrom;
-    private Integer yearTo;
+    private Integer priceFrom = 0;
+    private Integer priceTo = Integer.MAX_VALUE;
+    private Integer yearFrom = MIN_YEAR_VALUE;
+    private Integer yearTo = LocalDate.now().getYear();
 
     public Set<String> getRegions (){
         return regions;
@@ -80,18 +83,50 @@ public class Filters {
     }
 
     public void setPriceFrom (int price){
-        priceFrom = price;
+        if (price <= priceTo && price >= 0){
+            priceFrom = price;
+        }
     }
 
     public void setPriceTo (int price){
-        priceTo = price;
+        if (price >= priceFrom){
+            priceTo = price;
+        }
     }
 
     public void setYearFrom (int year){
-        yearFrom = year;
+        if (year <= yearTo && yearFrom >= MIN_YEAR_VALUE){
+            yearFrom = year;   
+        }
     }
 
     public void setYearTo (int year){
-        yearTo = year;
+        if (year >= yearFrom && year <= LocalDate.now().getYear()){
+            yearTo = year;
+        }
+    }
+
+    @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+
+        if (regions.size() > 0){
+            sb.append("regions: " + String.join(", ", regions));
+        } else {
+            sb.append("regions: all");
+        }
+        sb.append("\n");
+
+        if (cities.size() > 0){
+            sb.append("cities: " + String.join(", ", cities));
+        } else {
+            sb.append("cities: all");
+        }
+        sb.append("\n");
+
+        sb.append(String.format("price: from %d to %d%n", priceFrom, priceTo));
+        sb.append(String.format("year: from %d to %d%n", yearFrom, yearTo));
+
+        return sb.toString();
     }
 }
