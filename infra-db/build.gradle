@@ -3,4 +3,20 @@ version = '1.0-SNAPSHOT'
 
 dependencies {
     implementation project(":core")
+
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-mysql'
+}
+
+tasks.register('newMigration') {
+    doLast {
+        def desc = project.hasProperty('desc') ? project.property('desc') : 'new_migration'
+        def timestamp = new Date().format('yyyyMMddHHmmss')
+        def fileName = "${timestamp}__${desc}.sql"
+        def file = file("src/main/resources/db/migration/${fileName}")
+        file.createNewFile()
+        println "Migration created: ${file.path}"
+    }
 }
