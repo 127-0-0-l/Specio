@@ -4,10 +4,19 @@ import io.github._127_0_0_l.core.models.ChatState;
 import io.github._127_0_0_l.core.models.Filters;
 import io.github._127_0_0_l.core.models.TgChat;
 import io.github._127_0_0_l.core.ports.out.db.TgChatPort;
+import io.github._127_0_0_l.infra_db.repositories.TgChatRepository;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+@Component
 public class TgChatAdapter implements TgChatPort {
+    private final TgChatRepository repository;
+
+    public TgChatAdapter(TgChatRepository repository){
+        this.repository = repository;
+    }
+
     @Override
     public boolean create(TgChat chat) {
         return false;
@@ -25,7 +34,8 @@ public class TgChatAdapter implements TgChatPort {
 
     @Override
     public TgChat get(int id) {
-        return null;
+        var chat = repository.findById((Long)(long)id).get();
+        return new TgChat(id, true, ChatState.IDLE, null);
     }
 
     @Override
