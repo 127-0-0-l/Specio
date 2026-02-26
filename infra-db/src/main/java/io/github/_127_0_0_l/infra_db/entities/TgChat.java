@@ -1,17 +1,32 @@
 package io.github._127_0_0_l.infra_db.entities;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
+@Table(name = "tg_chats")
+@Getter
+@NoArgsConstructor
 public class TgChat {
     @Id
-    public int id;
+    private Long id;
 
-    public long chatId;
+    @Setter
+    @Column(nullable = false)
+    private String state;
 
-    public int stateId;
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "filters_id", referencedColumnName = "id")
+    @Setter
+    private Filters filters;
 
-    public int filtersId;
+    @Column(name = "last_message_id")
+    @Setter
+    private Long lastMessageId;
 
-    public int lastMessageId;
+    public TgChat(long id){
+        this.id = id;
+    }
 }

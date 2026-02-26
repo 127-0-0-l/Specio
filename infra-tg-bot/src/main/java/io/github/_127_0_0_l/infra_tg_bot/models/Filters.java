@@ -1,17 +1,17 @@
 package io.github._127_0_0_l.infra_tg_bot.models;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+import io.github._127_0_0_l.core.constants.ValidationConstants;
+
 public class Filters {
-    private final Integer MIN_YEAR_VALUE = 1900;
     private Set<String> regions = new HashSet<>();
     private Set<String> cities = new HashSet<>();
     private Integer priceFrom = 0;
     private Integer priceTo = Integer.MAX_VALUE;
-    private Integer yearFrom = MIN_YEAR_VALUE;
+    private Integer yearFrom = ValidationConstants.MIN_YEAR_VALUE;
     private Integer yearTo = LocalDate.now().getYear();
 
     public Set<String> getRegions (){
@@ -95,7 +95,7 @@ public class Filters {
     }
 
     public void setYearFrom (int year){
-        if (year <= yearTo && yearFrom >= MIN_YEAR_VALUE){
+        if (year <= yearTo && yearFrom >= ValidationConstants.MIN_YEAR_VALUE){
             yearFrom = year;   
         }
     }
