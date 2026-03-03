@@ -1,9 +1,7 @@
 package io.github._127_0_0_l.infra_db.entities;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "tg_chats")

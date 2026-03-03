@@ -4,10 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "regions")
+@Table(name = "content_source")
 @Getter
-@NoArgsConstructor
-public class Region {
+public class ContentSource {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -15,4 +14,8 @@ public class Region {
     @Setter
     @Column(unique = true, nullable = false)
     private String name;
+
+    @Setter
+    @Column(nullable = false)
+    private String source;
 }
