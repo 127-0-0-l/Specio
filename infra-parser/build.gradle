@@ -5,7 +5,5 @@ dependencies {
     implementation project(":core")
 
     implementation 'org.jsoup:jsoup:1.16.1'
-    implementation 'org.mapstruct:mapstruct:1.6.3'
-    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.19.2'
 }

@@ -16,7 +16,7 @@ public class ParserService {
         this.htmlParser = parser;
     }
 
-    public List<VehicleAdvert> parse(String sourceId, String html){
+    public List<VehicleAdvert> parse(Long sourceId, String html){
         return htmlParser.parse(sourceId, html);
     }
 }

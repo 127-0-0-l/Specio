@@ -22,7 +22,7 @@ public class ParserConfigAdapter implements ParserConfigPort {
     }
 
     @Override
-    public ParserConfig get(String sourceId) {
+    public ParserConfig get(Long sourceId) {
         return null;
     }
 }

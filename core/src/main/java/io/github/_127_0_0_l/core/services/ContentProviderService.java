@@ -22,15 +22,15 @@ public class ContentProviderService {
     }
 
     public String getContent(ContentSource source){
-        return contentProvider.getContent(source.name());
+        return contentProvider.getContent(source.id());
     }
 
     public void showContent(){
         ContentSource source = new ContentSource("google", "https://google.com");
-        String content = contentProvider.getContent(source.name());
+        String content = contentProvider.getContent(source.id());
         PrintStream out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
 //        out.println(content);
-        var result = parserService.parse(source.name(), content);
+        var result = parserService.parse(source.id(), content);
         for (var item : result){
             out.println(item);
         }

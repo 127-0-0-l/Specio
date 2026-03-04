@@ -9,5 +9,5 @@ public interface ParserConfigPort {
 
     boolean delete(String sourceId);
 
-    ParserConfig get(String sourceId);
+    ParserConfig get(Long sourceId);
 }
