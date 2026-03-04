@@ -4,8 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "content_source")
+@Table(name = "content_sources")
 @Getter
+@NoArgsConstructor
 public class ContentSource {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -7,7 +7,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
+@Table(name = "selectors")
 @Getter
+@NoArgsConstructor
 public class Selector {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,24 +20,28 @@ public class Selector {
     private String selector;
 
     @Setter
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Selector parent;
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Selector> innerSelectors = new ArrayList<>();
 
+    @Setter
     @Column(name = "is_multiple")
-    private Boolean isMultiple;
+    private Boolean isMultiple = false;
 
     @Setter
     @Column(name = "field_name", nullable = false)
     private String fieldName;
 
     @Setter
-    @Column(name = "content_type")
+    @ManyToOne
+    @JoinColumn(name = "selector_data_types_id", referencedColumnName = "id")
     private SelectorDataType contentType;
 
-    public void setIsMultiple(Boolean isMultiple){
-        if (isMultiple == null){
-            this.isMultiple = false;
-        } else {
-            this.isMultiple = isMultiple;
-        }
+    public void addInnerSelector(Selector child){
+        innerSelectors.add(child);
+        child.setParent(this);
     }
 }
