@@ -15,6 +15,11 @@ public class ParserConfig {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Setter
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "content_source_id", referencedColumnName = "id")
+    private ContentSource contentSource;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "parser_config_id")
     private List<Selector> selectors = new ArrayList<>();
