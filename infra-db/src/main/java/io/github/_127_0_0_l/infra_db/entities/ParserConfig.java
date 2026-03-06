@@ -20,7 +20,7 @@ public class ParserConfig {
     @JoinColumn(name = "content_source_id", referencedColumnName = "id")
     private ContentSource contentSource;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "parser_config_id")
     private List<Selector> selectors = new ArrayList<>();
 }

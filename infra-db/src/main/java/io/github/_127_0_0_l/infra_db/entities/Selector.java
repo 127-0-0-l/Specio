@@ -24,7 +24,7 @@ public class Selector {
     @JoinColumn(name = "parent_id")
     private Selector parent;
 
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<Selector> innerSelectors = new ArrayList<>();
 
     @Setter

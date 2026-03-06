@@ -24,7 +24,7 @@ public class ContentSourceAdapter implements ContentSourcePort {
     @Override
     public Long create(ContentSource source) {
         try{
-            var model = coreMapper.toContentSource(source);
+            var model = coreMapper.toDBContentSource(source);
             var saved = contentSourceRepository.save(model);
             return saved.getId();
         } catch (IllegalArgumentException e){
@@ -39,7 +39,7 @@ public class ContentSourceAdapter implements ContentSourcePort {
             if (!contentSourceRepository.existsById(source.id())){
                 throw new IllegalArgumentException("source with id=" + source.id() + " doesn't exists");
             }
-            var model = coreMapper.toContentSource(source);
+            var model = coreMapper.toDBContentSource(source);
             contentSourceRepository.save(model);
             return true;
         } catch (IllegalArgumentException e){
@@ -62,8 +62,7 @@ public class ContentSourceAdapter implements ContentSourcePort {
     public ContentSource get(Long sourceId) {
         var source = contentSourceRepository.findById(sourceId);
         if (source.isPresent()){
-            var result = coreMapper.toContentSource(source.get());
-            return result;
+            return coreMapper.toCoreContentSource(source.get());
         } else {
             return null;
         }
