@@ -1,10 +1,10 @@
 package io.github._127_0_0_l.core.models;
 
-import java.util.List;
+import java.util.Set;
 
 public record Filters(
-        List<String> regions,
-        List<String> cities,
+        Set<String> regions,
+        Set<String> cities,
         int priceFrom,
         int priceTo,
         int yearFrom,

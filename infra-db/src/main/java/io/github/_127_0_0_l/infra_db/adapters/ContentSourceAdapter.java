@@ -12,19 +12,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class ContentSourceAdapter implements ContentSourcePort {
     private final ContentSourceRepository contentSourceRepository;
-    private final DBMapper coreMapper;
+    private final DBMapper mapper;
 
     public ContentSourceAdapter(ContentSourceRepository contentSourceRepository,
-        DBMapper coreMapper
+        DBMapper mapper
     ){
         this.contentSourceRepository = contentSourceRepository;
-        this.coreMapper = coreMapper;
+        this.mapper = mapper;
     }
 
     @Override
     public Long create(ContentSource source) {
         try{
-            var model = coreMapper.toDBContentSource(source);
+            var model = mapper.toDBContentSource(source);
             var saved = contentSourceRepository.save(model);
             return saved.getId();
         } catch (IllegalArgumentException e){
@@ -39,7 +39,7 @@ public class ContentSourceAdapter implements ContentSourcePort {
             if (!contentSourceRepository.existsById(source.id())){
                 throw new IllegalArgumentException("source with id=" + source.id() + " doesn't exists");
             }
-            var model = coreMapper.toDBContentSource(source);
+            var model = mapper.toDBContentSource(source);
             contentSourceRepository.save(model);
             return true;
         } catch (IllegalArgumentException e){
@@ -62,7 +62,7 @@ public class ContentSourceAdapter implements ContentSourcePort {
     public ContentSource get(Long sourceId) {
         var source = contentSourceRepository.findById(sourceId);
         if (source.isPresent()){
-            return coreMapper.toCoreContentSource(source.get());
+            return mapper.toCoreContentSource(source.get());
         } else {
             return null;
         }

@@ -7,27 +7,25 @@ import io.github._127_0_0_l.core.models.TgChat;
 import java.util.List;
 
 public interface TgChatPort {
-    boolean create(TgChat chat);
+    Long create(TgChat chat);
 
     boolean update(TgChat chat);
 
-    boolean delete(int id);
+    boolean delete(Long id);
 
-    TgChat get(int id);
+    TgChat get(Long id);
 
-    List<TgChat> get(List<Integer> ids);
+    List<TgChat> get(List<Long> ids);
 
     List<TgChat> getAll();
 
-    ChatState getState(int chatId);
+    ChatState getState(Long chatId);
 
-    List<TgChat> getActiveChats();
+    List<TgChat> getByState(ChatState state);
 
-    boolean toggleChatActivation(int id);
+    boolean toggleChatActivation(Long id);
 
-    boolean updateFilters(int chatId, Filters filters);
+    boolean updateFilters(Long chatId, Filters filters);
 
-    boolean exists(int id);
-
-    String getInitMessage();
+    boolean exists(Long id);
 }

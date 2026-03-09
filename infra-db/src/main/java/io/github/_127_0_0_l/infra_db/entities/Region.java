@@ -15,4 +15,9 @@ public class Region {
     @Setter
     @Column(unique = true, nullable = false)
     private String name;
+
+    public Region (String name){
+        id = null;
+        this.name = name;
+    }
 }

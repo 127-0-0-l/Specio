@@ -15,4 +15,9 @@ public class City {
     @Setter
     @Column(unique = true, nullable = false)
     private String name;
+
+    public City (String name){
+        id = null;
+        this.name = name;
+    }
 }
