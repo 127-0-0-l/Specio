@@ -1,26 +1,14 @@
 package io.github._127_0_0_l.infra_tg_bot.models;
 
-import lombok.NoArgsConstructor;
-
-@NoArgsConstructor
 public class Chat {
     private final long id;
     private ChatState state;
-    private Filters filters;
+    private Filters filters = new Filters();
     private int lastMessageId;
 
-    public Chat (long id){
-        this.id = id;
-    }
-
     public Chat (long id, ChatState state){
-        this(id);
+        this.id = id;
         this.state = state;
-    }
-
-    public Chat (long id, ChatState state, Filters filters){
-        this(id, state);
-        this.filters = filters;
     }
 
     public long getId (){

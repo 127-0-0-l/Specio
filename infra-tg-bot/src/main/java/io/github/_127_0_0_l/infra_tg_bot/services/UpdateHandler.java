@@ -50,7 +50,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
 
     private void handleMessage(long chatId, String text){
         if (!tgChatPort.exists(chatId)){
-            var newChat = new Chat(chatId, ChatState.INIT, new Filters());
+            var newChat = new Chat(chatId, ChatState.INIT);
             tgChatPort.create(mapper.toCoreTgChat(newChat));
         }
         ChatState state = mapper.toBotChatState(tgChatPort.getState(chatId));

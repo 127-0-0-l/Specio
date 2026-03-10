@@ -1,4 +1,4 @@
-package io.github._127_0_0_l.infra_db.adapters;
+package io.github._127_0_0_l.infra_db.adapters.out;
 
 import io.github._127_0_0_l.core.ports.out.db.FiltersPort;
 

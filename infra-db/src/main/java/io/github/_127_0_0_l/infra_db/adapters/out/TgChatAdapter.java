@@ -1,4 +1,4 @@
-package io.github._127_0_0_l.infra_db.adapters;
+package io.github._127_0_0_l.infra_db.adapters.out;
 
 import io.github._127_0_0_l.core.models.*;
 import io.github._127_0_0_l.core.ports.out.db.TgChatPort;
@@ -39,8 +39,8 @@ public class TgChatAdapter implements TgChatPort {
     @Override
     public boolean update(TgChat chat) {
         try{
-            if (!tgChatRepository.existsById(chat.chatId())){
-                throw new IllegalArgumentException("tg chat with id=" + chat.chatId() + " doesn't exists");
+            if (!tgChatRepository.existsById(chat.id())){
+                throw new IllegalArgumentException("tg chat with id=" + chat.id() + " doesn't exists");
             }
             var entity = mapper.toDBTgChat(chat);
             tgChatRepository.save(entity);
