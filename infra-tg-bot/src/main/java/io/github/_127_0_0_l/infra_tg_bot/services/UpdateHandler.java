@@ -51,7 +51,8 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
     private void handleMessage(long chatId, String text){
         if (!tgChatPort.exists(chatId)){
             var newChat = new Chat(chatId, ChatState.INIT);
-            tgChatPort.create(mapper.toCoreTgChat(newChat));
+            var mapped = mapper.toCoreTgChat(newChat);
+            tgChatPort.create(mapped);
         }
         ChatState state = mapper.toBotChatState(tgChatPort.getState(chatId));
 
@@ -94,7 +95,8 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
                 Chat chat = mapper.toBotChat(tgChatPort.get(chatId));
                 chat.setState(ChatState.IDLE);
                 chat.setLastMessageId(messageId);
-                tgChatPort.update(mapper.toCoreTgChat(chat));
+                var mapped = mapper.toCoreTgChat(chat);
+                tgChatPort.update(mapped);
                 break;
             default:
                 break;
@@ -158,7 +160,8 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
                 Chat chat = mapper.toBotChat(tgChatPort.get(chatId));
                 chat.setState(ChatState.IDLE);
                 chat.setLastMessageId(mId);
-                tgChatPort.update(mapper.toCoreTgChat(chat));
+                var mapped = mapper.toCoreTgChat(chat);
+                tgChatPort.update(mapped);
                 break;
             default:
                 break;
