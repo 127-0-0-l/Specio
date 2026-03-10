@@ -18,12 +18,13 @@ import lombok.Setter;
 @Getter
 @NoArgsConstructor
 public class Filters {
+    @Setter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Setter
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "filter_regions",
         joinColumns = @JoinColumn(name = "filter_id"),
@@ -32,7 +33,7 @@ public class Filters {
     private Set<Region> regions = new HashSet<>();
 
     @Setter
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "filter_cities",
         joinColumns = @JoinColumn(name = "filter_id"),

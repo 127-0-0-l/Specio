@@ -6,25 +6,19 @@ import lombok.*;
 @Entity
 @Table(name = "tg_chats")
 @Getter
+@Setter
 @NoArgsConstructor
 public class TgChat {
     @Id
     private Long id;
 
-    @Setter
     @Column(nullable = false)
     private String state;
 
-    @Setter
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(orphanRemoval = true)
     @JoinColumn(name = "filters_id", referencedColumnName = "id")
     private Filters filters;
 
-    @Setter
     @Column(name = "last_message_id")
     private Long lastMessageId;
-
-    public TgChat(long id){
-        this.id = id;
-    }
 }

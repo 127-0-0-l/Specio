@@ -5,8 +5,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 import io.github._127_0_0_l.core.constants.ValidationConstants;
+import lombok.Getter;
+import lombok.Setter;
 
 public class Filters {
+    @Getter
+    @Setter
+    private Long id;
     private Set<String> regions = new HashSet<>();
     private Set<String> cities = new HashSet<>();
     private Integer priceFrom = 0;
