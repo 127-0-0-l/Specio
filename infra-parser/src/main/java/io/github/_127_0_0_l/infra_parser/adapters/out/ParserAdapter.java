@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github._127_0_0_l.core.ports.out.db.ContentSourcePort;
 import io.github._127_0_0_l.infra_parser.interfaces.ParserMapper;
 import io.github._127_0_0_l.infra_parser.interfaces.HtmlParser;
-import io.github._127_0_0_l.core.models.VehicleAdvert;
 import io.github._127_0_0_l.core.ports.out.ParserPort;
 import io.github._127_0_0_l.core.ports.out.db.ParserConfigPort;
 import org.springframework.stereotype.Component;
@@ -34,7 +33,7 @@ public class ParserAdapter implements ParserPort {
     }
 
     @Override
-    public List<VehicleAdvert> parse(Long sourceId, String content) {
+    public List<String> parse(Long sourceId, String content) {
         var parserConfig = parserConfigPort.get(sourceId);
         var source = contentSourcePort.get(sourceId);
         if (parserConfig.isEmpty() && source.isEmpty()){
@@ -47,16 +46,21 @@ public class ParserAdapter implements ParserPort {
         return toVehicleAdvert(json);
     }
 
-    private List<VehicleAdvert> toVehicleAdvert(String json){
+    private List<String> toVehicleAdvert(String json){
         ObjectMapper mapper = new ObjectMapper();
-        VehicleAdvert[] array;
+        Object[] array;
 
         try {
-            array = mapper.readValue(json, VehicleAdvert[].class);
+            array = mapper.readValue(json, Object[].class);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
 
-        return Arrays.asList(array);
+        List<String> result = new ArrayList<>();
+        for (var item : array){
+            result.add(item.toString());
+        }
+
+        return result;
     }
 }
