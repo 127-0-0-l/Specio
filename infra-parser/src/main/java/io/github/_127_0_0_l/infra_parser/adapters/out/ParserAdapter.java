@@ -10,7 +10,6 @@ import io.github._127_0_0_l.core.ports.out.db.ParserConfigPort;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Component

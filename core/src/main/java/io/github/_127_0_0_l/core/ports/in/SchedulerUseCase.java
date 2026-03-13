@@ -6,5 +6,5 @@ import io.github._127_0_0_l.core.models.ContentSource;
 import java.util.List;
 
 public interface SchedulerUseCase {
-    List<NewAdvertLog> getNewAdverts(ContentSource site);
+    List<NewAdvertLog> runFetchAndNotify(ContentSource source);
 }
