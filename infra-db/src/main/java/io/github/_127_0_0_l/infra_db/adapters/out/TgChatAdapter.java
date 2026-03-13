@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -25,14 +26,14 @@ public class TgChatAdapter implements TgChatPort {
     }
 
     @Override
-    public Long create(TgChat chat) {
+    public Optional<Long> create(TgChat chat) {
         try{
             var entity = mapper.toDBTgChat(chat);
             var saved = tgChatRepository.save(entity);
-            return saved.getId();
+            return Optional.of(saved.getId());
         } catch (IllegalArgumentException e){
             log.error("Failed to create tg chat: {}", e.getMessage(), e);
-            return null;
+            return Optional.empty();
         }
     }
 
@@ -62,12 +63,13 @@ public class TgChatAdapter implements TgChatPort {
     }
 
     @Override
-    public TgChat get(Long id) {
+    public Optional<TgChat> get(Long id) {
         var chat = tgChatRepository.findById(id);
         if (chat.isPresent()){
-            return mapper.toCoreTgChat(chat.get());
+            var mapped = mapper.toCoreTgChat(chat.get());
+            return Optional.of(mapped);
         } else {
-            return null;
+            return Optional.empty();
         }
     }
 
@@ -77,7 +79,7 @@ public class TgChatAdapter implements TgChatPort {
         if (chats.size() != 0){
             return mapper.toCoreTgChats(chats);
         } else {
-            return null;
+            return new ArrayList<>();
         }
     }
 
@@ -95,9 +97,10 @@ public class TgChatAdapter implements TgChatPort {
     public ChatState getState(Long chatId) {
         var state = tgChatRepository.findChatStateById(chatId);
         if (state.isPresent()){
-            return mapper.toCoreTgChatState(state.get().getState());
+            var mapped = mapper.toCoreTgChatState(state.get().getState());
+            return mapped;
         } else {
-            return null;
+            return ChatState.INACTIVE;
         }
     }
 

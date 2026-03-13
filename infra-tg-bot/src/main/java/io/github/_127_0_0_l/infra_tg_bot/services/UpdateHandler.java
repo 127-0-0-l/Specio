@@ -89,10 +89,11 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
                 } else {
                     messageId = notificationService.notifyWithKeyboardButtons(
                             chatId,
-                            "welcome back\n your last settings are:\n" + mapper.toBotChat(tgChatPort.get(chatId)).getFilters().toString(),
+                            "welcome back\n your last settings are:\n"
+                                    + mapper.toBotChat(tgChatPort.get(chatId).orElseThrow()).getFilters().toString(),
                             buttons);
                 }
-                Chat chat = mapper.toBotChat(tgChatPort.get(chatId));
+                Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
                 chat.setState(ChatState.IDLE);
                 chat.setLastMessageId(messageId);
                 var mapped = mapper.toCoreTgChat(chat);
@@ -105,7 +106,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
 
     private void handleIdleCase(long chatId, String text){
         int messageId;
-        Chat chat = mapper.toBotChat(tgChatPort.get(chatId));
+        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
         switch (text) {
             case "run":
                 List<Queue<ChatKeyboardButton>> buttons = new ArrayList<>();
@@ -157,7 +158,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
                 row.add(new ChatKeyboardButton("/stop"));
                 buttons.add(row);
                 int mId = notificationService.notifyWithKeyboardButtons(chatId, "stop nitifying", buttons);
-                Chat chat = mapper.toBotChat(tgChatPort.get(chatId));
+                Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
                 chat.setState(ChatState.IDLE);
                 chat.setLastMessageId(mId);
                 var mapped = mapper.toCoreTgChat(chat);
@@ -171,7 +172,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
     private void handleWaitingForFilterOptionCase(long chatId, String text){
         List<Queue<ChatInlineButton>> buttons = new ArrayList<>();
         int messageId;
-        var chat = mapper.toBotChat(tgChatPort.get(chatId));
+        var chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
 
         switch (text) {
             case "region":
@@ -248,7 +249,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
     private void handleWaitingForYearOptionCase(long chatId, String text){
         List<Queue<ChatInlineButton>> buttons = new ArrayList<>();
         int messageId;
-        Chat chat = mapper.toBotChat(tgChatPort.get(chatId));
+        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
 
         switch (text){
             case "year_from":
@@ -287,7 +288,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
     }
 
     private void handleWaitingForYearFromCase(long chatId, String text){
-        Chat chat = mapper.toBotChat(tgChatPort.get(chatId));
+        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
         boolean valid;
         int year;
         int messageId;
@@ -326,7 +327,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
     }
 
     private void handleWaitingForYearToCase(long chatId, String text){
-        Chat chat = mapper.toBotChat(tgChatPort.get(chatId));
+        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
         boolean valid = false;
         int messageId;
         int year;
@@ -362,7 +363,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
     private void handleWaitingForPriceOptionCase(long chatId, String text){
         List<Queue<ChatInlineButton>> buttons = new ArrayList<>();
         int messageId;
-        Chat chat = mapper.toBotChat(tgChatPort.get(chatId));
+        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
 
         switch (text){
             case "price_from":
@@ -401,7 +402,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
     }
 
     private void handleWaitingForPriceFromCase(long chatId, String text){
-        Chat chat = mapper.toBotChat(tgChatPort.get(chatId));
+        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
         boolean valid = false;
         int messageId;
         int price;
@@ -435,7 +436,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
     }
 
     private void handleWaitingForPriceToCase(long chatId, String text){
-        Chat chat = mapper.toBotChat(tgChatPort.get(chatId));
+        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
         boolean valid = false;
         int messageId;
         int price;
@@ -469,7 +470,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
     }
 
     private void handleWaitingForRegionCase(long chatId, String text){
-        Chat chat = mapper.toBotChat(tgChatPort.get(chatId));
+        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
         int messageId;
 
         if (text.equals("submit")) {
@@ -510,7 +511,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
     }
 
     private void handleWaitingForCityCase(long chatId, String text){
-        Chat chat = mapper.toBotChat(tgChatPort.get(chatId));
+        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
         int messageId;
 
         if (text.equals("submit")) {

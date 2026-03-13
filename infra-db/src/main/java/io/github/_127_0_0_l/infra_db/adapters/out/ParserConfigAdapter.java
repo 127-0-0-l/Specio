@@ -7,6 +7,8 @@ import io.github._127_0_0_l.infra_db.repositories.ParserConfigRepository;
 
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Component
 public class ParserConfigAdapter implements ParserConfigPort {
     private final ParserConfigRepository parserConfigRepository;
@@ -35,12 +37,13 @@ public class ParserConfigAdapter implements ParserConfigPort {
     }
 
     @Override
-    public ParserConfig get(Long sourceId) {
+    public Optional<ParserConfig> get(Long sourceId) {
         var config = parserConfigRepository.findById(sourceId);
         if (config.isPresent()){
-            return mapper.toCoreParserConfig(config.get());
+            var mapped = mapper.toCoreParserConfig(config.get());
+            return Optional.of(mapped);
         } else {
-            return null;
+            return Optional.empty();
         }
     }
 }

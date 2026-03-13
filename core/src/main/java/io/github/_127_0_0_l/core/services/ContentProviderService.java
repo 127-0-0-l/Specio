@@ -13,25 +13,26 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 @Slf4j
 @Service
 public class ContentProviderService {
     private final ContentProviderPort contentProvider;
     private final ParserService parserService;
-    private final ContentSourcePort contentSource;
+    private final ContentSourcePort contentSourcePort;
     private final TgChatPort tgChatPort;
     private final NotificationPort notificationPort;
 
     public ContentProviderService(
             ContentProviderPort contentProvider,
             ParserService parserService,
-            ContentSourcePort contentSource,
+            ContentSourcePort contentSourcePort,
             TgChatPort tgChatPort,
             NotificationPort notificationPort){
         this.contentProvider = contentProvider;
         this.parserService = parserService;
-        this.contentSource = contentSource;
+        this.contentSourcePort = contentSourcePort;
         this.tgChatPort = tgChatPort;
         this.notificationPort = notificationPort;
     }
@@ -41,13 +42,17 @@ public class ContentProviderService {
     }
 
     public void showContent(){
-        ContentSource source = contentSource.get(Long.valueOf(1));
-        String content = contentProvider.getContent(source.id());
+        Optional<ContentSource> source = contentSourcePort.get(Long.valueOf(1));
+        if (source.isEmpty()){
+            return;
+        }
+
+        String content = contentProvider.getContent(source.get().id());
         //PrintStream out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
         //out.println(content);
 
         var chats = tgChatPort.getByState(ChatState.NOTIFYING);
-        var result = parserService.parse(source.id(), content);
+        var result = parserService.parse(source.get().id(), content);
 
         for (var chat : chats){
             for (var item : result){

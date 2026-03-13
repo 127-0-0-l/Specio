@@ -5,15 +5,16 @@ import io.github._127_0_0_l.core.models.Filters;
 import io.github._127_0_0_l.core.models.TgChat;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface TgChatPort {
-    Long create(TgChat chat);
+    Optional<Long> create(TgChat chat);
 
     boolean update(TgChat chat);
 
     boolean delete(Long id);
 
-    TgChat get(Long id);
+    Optional<TgChat> get(Long id);
 
     List<TgChat> get(List<Long> ids);
 

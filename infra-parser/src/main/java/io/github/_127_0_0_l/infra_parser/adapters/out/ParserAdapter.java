@@ -10,6 +10,7 @@ import io.github._127_0_0_l.core.ports.out.ParserPort;
 import io.github._127_0_0_l.core.ports.out.db.ParserConfigPort;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,9 +35,15 @@ public class ParserAdapter implements ParserPort {
 
     @Override
     public List<VehicleAdvert> parse(Long sourceId, String content) {
-        var parserConfig = coreMapper.toHtmlParserConfig(parserConfigPort.get(sourceId));
-        String url = contentSourcePort.get(sourceId).source();
-        String json = htmlParser.parse(url, content, parserConfig);
+        var parserConfig = parserConfigPort.get(sourceId);
+        var source = contentSourcePort.get(sourceId);
+        if (parserConfig.isEmpty() && source.isEmpty()){
+            return new ArrayList<>();
+        }
+
+        var htmlParserConfig = coreMapper.toHtmlParserConfig(parserConfig.get());
+        String url = source.get().source();
+        String json = htmlParser.parse(url, content, htmlParserConfig);
         return toVehicleAdvert(json);
     }
 

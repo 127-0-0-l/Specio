@@ -21,6 +21,9 @@ public class ContentProviderAdapter implements ContentProviderPort {
     @Override
     public String getContent(Long sourceId) {
         var source = contentSourcePort.get(sourceId);
-        return httpClient.getHttp(source.source());
+        if (source.isEmpty()){
+            return "";
+        }
+        return httpClient.getHttp(source.get().source());
     }
 }

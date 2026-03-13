@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Slf4j
 @Component
 public class ContentSourceAdapter implements ContentSourcePort {
@@ -22,14 +24,14 @@ public class ContentSourceAdapter implements ContentSourcePort {
     }
 
     @Override
-    public Long create(ContentSource source) {
+    public Optional<Long> create(ContentSource source) {
         try{
             var model = mapper.toDBContentSource(source);
             var saved = contentSourceRepository.save(model);
-            return saved.getId();
+            return Optional.of(saved.getId());
         } catch (IllegalArgumentException e){
             log.error("Failed to create content source: {}", e.getMessage(), e);
-            return null;
+            return Optional.empty();
         }
     }
 
@@ -59,12 +61,13 @@ public class ContentSourceAdapter implements ContentSourcePort {
     }
 
     @Override
-    public ContentSource get(Long sourceId) {
+    public Optional<ContentSource> get(Long sourceId) {
         var source = contentSourceRepository.findById(sourceId);
         if (source.isPresent()){
-            return mapper.toCoreContentSource(source.get());
+            var mapped = mapper.toCoreContentSource(source.get());
+            return Optional.of(mapped);
         } else {
-            return null;
+            return Optional.empty();
         }
     }
 }

@@ -2,12 +2,14 @@ package io.github._127_0_0_l.core.ports.out.db;
 
 import io.github._127_0_0_l.core.models.ContentSource;
 
+import java.util.Optional;
+
 public interface ContentSourcePort {
-    public Long create(ContentSource source);
+    Optional<Long> create(ContentSource source);
 
-    public boolean update(ContentSource source);
+    boolean update(ContentSource source);
 
-    public boolean delete(Long sourceId);
+    boolean delete(Long sourceId);
 
-    ContentSource get(Long sourceId);
+    Optional<ContentSource> get(Long sourceId);
 }
