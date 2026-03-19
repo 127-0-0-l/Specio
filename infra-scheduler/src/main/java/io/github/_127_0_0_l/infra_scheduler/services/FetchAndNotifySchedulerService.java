@@ -38,6 +38,6 @@ public class FetchAndNotifySchedulerService implements FetchAndNotifyScheduler {
     }
     
     private Instant calculateNextTime(){
-        return Instant.now().plusSeconds(10 + new Random().nextInt(10));
+        return Instant.now().plusSeconds(300 + new Random().nextInt(30));
     }
 }

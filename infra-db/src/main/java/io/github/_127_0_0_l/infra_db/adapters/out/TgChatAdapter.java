@@ -7,6 +7,7 @@ import io.github._127_0_0_l.infra_db.repositories.TgChatRepository;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +39,7 @@ public class TgChatAdapter implements TgChatPort {
     }
 
     @Override
+    @Transactional
     public boolean update(TgChat chat) {
         try{
             if (!tgChatRepository.existsById(chat.id())){

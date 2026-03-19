@@ -4,6 +4,9 @@ import io.github._127_0_0_l.core.ports.out.db.FiltersPort;
 
 import java.util.List;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class FiltersAdapter implements FiltersPort {
     @Override
     public List<String> getContentSources() {

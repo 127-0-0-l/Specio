@@ -5,9 +5,9 @@ import io.github._127_0_0_l.core.models.ContentType;
 import java.util.List;
 
 public interface ContentTypePort {
-    boolean createContentType(ContentType contentType);
+    boolean create(ContentType contentType);
 
-    boolean deleteContentType(String contentType);
+    boolean delete(String contentType);
 
-    List<String> getContentTypes();
+    List<String> getAll();
 }

@@ -15,7 +15,7 @@ public class TgChat {
     @Column(nullable = false)
     private String state;
 
-    @OneToOne(orphanRemoval = true)
+    @OneToOne(orphanRemoval = true, cascade = CascadeType.ALL)
     @JoinColumn(name = "filters_id", referencedColumnName = "id")
     private Filters filters;
 

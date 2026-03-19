@@ -4,10 +4,10 @@ import java.util.Set;
 
 public record Filters(
         Long id,
-        Set<String> regions,
-        Set<String> cities,
-        int priceFrom,
-        int priceTo,
-        int yearFrom,
-        int yearTo
+        Set<Region> regions,
+        Set<City> cities,
+        Integer priceFrom,
+        Integer priceTo,
+        Integer yearFrom,
+        Integer yearTo
 ) { }

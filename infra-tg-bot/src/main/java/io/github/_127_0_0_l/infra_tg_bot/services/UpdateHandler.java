@@ -1,8 +1,12 @@
 package io.github._127_0_0_l.infra_tg_bot.services;
 
+import io.github._127_0_0_l.core.ports.out.db.CitiesPort;
+import io.github._127_0_0_l.core.ports.out.db.RegionsPort;
 import io.github._127_0_0_l.core.ports.out.db.TgChatPort;
 import io.github._127_0_0_l.infra_tg_bot.interfaces.TgBotMapper;
 import io.github._127_0_0_l.infra_tg_bot.models.*;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsumer;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -10,22 +14,27 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import java.time.LocalDateTime;
 import java.util.*;
 
+@Slf4j
 @Service
 public class UpdateHandler implements LongPollingUpdateConsumer {
     private final NotificationService notificationService;
-    private final List<String> regions = List.of("Minsk region", "Brest region", "Grodno region", "Vitebsk region",
-            "Gomel region", "Mogilev region");
-    private final List<String> cities = List.of("Minsk", "Brest", "Bobruisk", "Visokaye", "Kamenets", "Baranovichi");
+    private final List<Region> regions;
+    private final List<City> cities;
     private final TgChatPort tgChatPort;
     private final TgBotMapper mapper;
 
     public UpdateHandler(NotificationService notificationService,
         TgChatPort tgChatPort,
-        TgBotMapper mapper
+        TgBotMapper mapper,
+        RegionsPort regionsPort,
+        CitiesPort citiesPort
     ){
         this.notificationService = notificationService;
         this.tgChatPort = tgChatPort;
         this.mapper = mapper;
+
+        regions = mapper.toBotRegions(regionsPort.getAll());
+        cities = mapper.toBotCities(citiesPort.getAll());
     }
 
     @Override
@@ -44,7 +53,11 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
                 continue;
             }
 
-            handleMessage(chatId, text);
+            try {
+                handleMessage(chatId, text);
+            } catch (Exception e){
+                log.error(e.getMessage(), e);
+            }
         }
     }
 
@@ -74,30 +87,14 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
     }
 
     private void handleInitCase(long chatId, String text){
-        int messageId;
         switch (text){
             case "/start":
-                List<Queue<ChatKeyboardButton>> buttons = new ArrayList<>();
-                Queue<ChatKeyboardButton> row = new LinkedList<>();
-                row.add(new ChatKeyboardButton("run"));
-                row.add(new ChatKeyboardButton("set filters"));
-                row.add(new ChatKeyboardButton("/stop"));
-                buttons.add(row);
-
                 if (mapper.toBotChatState(tgChatPort.getState(chatId)) == ChatState.INIT) {
-                    messageId = notificationService.notifyWithKeyboardButtons(chatId, "welcome", buttons);
+                    goToMainMenu(chatId, "welcome");
                 } else {
-                    messageId = notificationService.notifyWithKeyboardButtons(
-                            chatId,
-                            "welcome back\n your last settings are:\n"
-                                    + mapper.toBotChat(tgChatPort.get(chatId).orElseThrow()).getFilters().toString(),
-                            buttons);
+                    goToMainMenu(chatId, "welcome back\n your last settings are:\n"
+                        + mapper.toBotChat(tgChatPort.get(chatId).orElseThrow()).getFilters().toString());
                 }
-                Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
-                chat.setState(ChatState.IDLE);
-                chat.setLastMessageId(messageId);
-                var mapped = mapper.toCoreTgChat(chat);
-                tgChatPort.update(mapped);
                 break;
             default:
                 break;
@@ -105,64 +102,27 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
     }
 
     private void handleIdleCase(long chatId, String text){
-        int messageId;
-        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
         switch (text) {
             case "run":
-                List<Queue<ChatKeyboardButton>> buttons = new ArrayList<>();
-                Queue<ChatKeyboardButton> row = new LinkedList<>();
-                row.add(new ChatKeyboardButton("stop"));
-                buttons.add(row);
-                messageId = notificationService.notifyWithKeyboardButtons(chatId, "start notifying", buttons);
-                chat.setState(ChatState.NOTIFYING);
-                chat.setLastMessageId(messageId);
+                goToNotifying(chatId, "start notifying");
                 break;
             case "set filters":
-                List<Queue<ChatInlineButton>> buttons1 = new ArrayList<>();
-                Queue<ChatInlineButton> row1 = new LinkedList<>();
-                row1.add(new ChatInlineButton("Region", "region"));
-                row1.add(new ChatInlineButton("City", "city"));
-                Queue<ChatInlineButton> row2 = new LinkedList<>();
-                row2.add(new ChatInlineButton("Price", "price"));
-                row2.add(new ChatInlineButton("Year", "year"));
-                buttons1.add(row1);
-                buttons1.add(row2);
-                messageId = notificationService.notifyWithInlineButtons(
-                        chatId, "current filters:\nchoose filter to set", buttons1);
-                chat.setState(ChatState.WAITING_FOR_FILTER_OPTION);
-                chat.setLastMessageId(messageId);
+                goToFilterMainMenu(chatId, "current filters:\n"
+                    + mapper.toBotChat(tgChatPort.get(chatId).orElseThrow()).getFilters().toString()
+                    + "\nchoose filter to set");
                 break;
             case "/stop":
-                List<Queue<ChatKeyboardButton>> buttons2 = new ArrayList<>();
-                Queue<ChatKeyboardButton> row3 = new LinkedList<>();
-                row3.add(new ChatKeyboardButton("/start"));
-                buttons2.add(row3);
-                messageId = notificationService.notifyWithKeyboardButtons(chatId, "stopped", buttons2);
-                chat.setState(ChatState.INACTIVE);
-                chat.setLastMessageId(messageId);
+                goToInactive(chatId, "stopped");
                 break;
             default:
                 break;
         }
-
-        tgChatPort.update(mapper.toCoreTgChat(chat));
     }
 
     private void handleNotifyingCase(long chatId, String text){
         switch (text) {
             case "stop":
-                List<Queue<ChatKeyboardButton>> buttons = new ArrayList<>();
-                Queue<ChatKeyboardButton> row = new LinkedList<>();
-                row.add(new ChatKeyboardButton("run"));
-                row.add(new ChatKeyboardButton("set filters"));
-                row.add(new ChatKeyboardButton("/stop"));
-                buttons.add(row);
-                int mId = notificationService.notifyWithKeyboardButtons(chatId, "stop nitifying", buttons);
-                Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
-                chat.setState(ChatState.IDLE);
-                chat.setLastMessageId(mId);
-                var mapped = mapper.toCoreTgChat(chat);
-                tgChatPort.update(mapped);
+                goToMainMenu(chatId, "stop notifying");
                 break;
             default:
                 break;
@@ -170,384 +130,402 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
     }
 
     private void handleWaitingForFilterOptionCase(long chatId, String text){
-        List<Queue<ChatInlineButton>> buttons = new ArrayList<>();
-        int messageId;
-        var chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
-
         switch (text) {
             case "region":
-                for (String region : regions){
-                    Queue<ChatInlineButton> row = new LinkedList<>();
-                    row.add(new ChatInlineButton(
-                            (chat.getFilters().getRegions().contains(region) ? "🟢 " : "⭕️ ") + region,
-                            region));
-                    buttons.add(row);
-                }
-                Queue<ChatInlineButton> row5 = new LinkedList<>();
-                row5.add(new ChatInlineButton("submit", "submit"));
-                buttons.add(row5);
-                messageId = notificationService.notifyWithInlineButtons(chatId, "chose regions", buttons);
-                chat.setState(ChatState.WAITING_FOR_REGION);
-                chat.setLastMessageId(messageId);
+                goToRegions(chatId, "chose regions");
                 break;
             case "city":
-                for (String city : cities){
-                    Queue<ChatInlineButton> row = new LinkedList<>();
-                    row.add(new ChatInlineButton(
-                            (chat.getFilters().getCities().contains(city) ? "🟢 " : "⭕️ ") + city,
-                            city));
-                    buttons.add(row);
-                }
-                Queue<ChatInlineButton> row6 = new LinkedList<>();
-                row6.add(new ChatInlineButton("submit", "submit"));
-                buttons.add(row6);
-                messageId = notificationService.notifyWithInlineButtons(chatId, "chose city", buttons);
-                chat.setState(ChatState.WAITING_FOR_CITY);
-                chat.setLastMessageId(messageId);
+                goToCities(chatId, "chose cities");
                 break;
             case "price":
-                Queue<ChatInlineButton> row = new LinkedList<>();
-                row.add(new ChatInlineButton("price from", "price_from"));
-                row.add(new ChatInlineButton("price to", "price_to"));
-                Queue<ChatInlineButton> row1 = new LinkedList<>();
-                row1.add(new ChatInlineButton("submit", "submit"));
-                buttons.add(row);
-                buttons.add(row1);
-                messageId = notificationService.notifyWithInlineButtons(chatId, "chose price option", buttons);
-                chat.setState(ChatState.WAITING_FOR_PRICE_OPTION);
-                chat.setLastMessageId(messageId);
+                goToPriceOptions(chatId, "chose price option");
                 break;
             case "year":
-                Queue<ChatInlineButton> row3 = new LinkedList<>();
-                row3.add(new ChatInlineButton("year from", "year_from"));
-                row3.add(new ChatInlineButton("year to", "year_to"));
-                Queue<ChatInlineButton> row4 = new LinkedList<>();
-                row4.add(new ChatInlineButton("submit", "submit"));
-                buttons.add(row3);
-                buttons.add(row4);
-                messageId = notificationService.notifyWithInlineButtons(chatId, "chose year options", buttons);
-                chat.setState(ChatState.WAITING_FOR_YEAR_OPTION);
-                chat.setLastMessageId(messageId);
+                goToYearOptions(chatId, "chose year options");
                 break;
-            case "back":
-                List<Queue<ChatKeyboardButton>> buttons1 = new ArrayList<>();
-                Queue<ChatKeyboardButton> row2 = new LinkedList<>();
-                row2.add(new ChatKeyboardButton("run"));
-                row2.add(new ChatKeyboardButton("set filters"));
-                buttons1.add(row2);
-                messageId = notificationService.notifyWithKeyboardButtons(chatId, "", buttons1);
-                chat.setState(ChatState.IDLE);
-                chat.setLastMessageId(messageId);
+            case "to main menu":
+                goToMainMenu(chatId, "filters setted");
                 break;
             default:
                 break;
         }
-
-        tgChatPort.update(mapper.toCoreTgChat(chat));
     }
 
     private void handleWaitingForYearOptionCase(long chatId, String text){
-        List<Queue<ChatInlineButton>> buttons = new ArrayList<>();
-        int messageId;
-        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
-
         switch (text){
             case "year_from":
-                Queue<ChatInlineButton> row = new LinkedList<>();
-                row.add(new ChatInlineButton("back", "back"));
-                buttons.add(row);
-                messageId = notificationService.notifyWithInlineButtons(chatId, "enter year_from", buttons);
-                chat.setState(ChatState.WAITING_FOR_YEAR_FROM);
-                chat.setLastMessageId(messageId);
+                goToYearFromEntering(chatId, "enter year_from");
                 break;
             case "year_to":
-                Queue<ChatInlineButton> row1 = new LinkedList<>();
-                row1.add(new ChatInlineButton("back", "back"));
-                buttons.add(row1);
-                messageId = notificationService.notifyWithInlineButtons(chatId, "enter year_to", buttons);
-                chat.setState(ChatState.WAITING_FOR_YEAR_TO);
-                chat.setLastMessageId(messageId);
+                goToYearToEntering(chatId, "enter year_to");
                 break;
             case "submit":
-                Queue<ChatInlineButton> row2 = new LinkedList<>();
-                row2.add(new ChatInlineButton("Region", "region"));
-                row2.add(new ChatInlineButton("City", "city"));
-                Queue<ChatInlineButton> row3 = new LinkedList<>();
-                row3.add(new ChatInlineButton("Price", "price"));
-                row3.add(new ChatInlineButton("Year", "year"));
-                buttons.add(row2);
-                buttons.add(row3);
-                messageId = notificationService.notifyWithInlineButtons(
-                        chatId, "current filters:\nchoose filter to set", buttons);
-                chat.setState(ChatState.WAITING_FOR_FILTER_OPTION);
-                chat.setLastMessageId(messageId);
+                goToFilterMainMenu(chatId, "current filters:\n"
+                    + mapper.toBotChat(tgChatPort.get(chatId).orElseThrow()).getFilters().toString()
+                    + "\nchoose filter to set");
                 break;
         }
-
-        tgChatPort.update(mapper.toCoreTgChat(chat));
     }
 
     private void handleWaitingForYearFromCase(long chatId, String text){
-        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
-        boolean valid;
-        int year;
-        int messageId;
+        boolean isValid = false;
 
         try {
-            year = Integer.parseInt(text);
+            int year = Integer.parseInt(text);
+            Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
             if (year >= 1900 && chat.getFilters().getYearTo() >= year){
-                valid = true;
+                isValid = true;
                 chat.getFilters().setYearFrom(year);
-            } else {
-                valid = false;
+                tgChatPort.update(mapper.toCoreTgChat(chat));
             }
-        } catch (Exception e){
-            valid = false;
-        }
+        } catch (Exception e) { }
 
-        List<Queue<ChatInlineButton>> buttons = new ArrayList<>();
-        Queue<ChatInlineButton> row = new LinkedList<>();
-        row.add(new ChatInlineButton("year from", "year_from"));
-        row.add(new ChatInlineButton("year to", "year_to"));
-        Queue<ChatInlineButton> row1 = new LinkedList<>();
-        row1.add(new ChatInlineButton("submit", "submit"));
-        buttons.add(row);
-        buttons.add(row1);
-
-        if (valid){
-            messageId = notificationService.notifyWithInlineButtons(chatId, "set successfully\nchose year options", buttons);
+        if (isValid){
+            goToYearOptions(chatId, "set successfully\nchose year options");
         } else {
-            messageId = notificationService.notifyWithInlineButtons(chatId, "invalid value\nchose year options", buttons);
+            goToYearOptions(chatId, "invalid value\nchose year options");
         }
-
-        chat.setState(ChatState.WAITING_FOR_YEAR_OPTION);
-        chat.setLastMessageId(messageId);
-
-        tgChatPort.update(mapper.toCoreTgChat(chat));
     }
 
     private void handleWaitingForYearToCase(long chatId, String text){
-        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
-        boolean valid = false;
-        int messageId;
-        int year;
+        boolean isValid = false;
 
         try {
-            year = Integer.parseInt(text);
+            int year = Integer.parseInt(text);
+            Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
             if (year <= LocalDateTime.now().getYear() && chat.getFilters().getYearFrom() <= year){
-                valid = true;
+                isValid = true;
                 chat.getFilters().setYearTo(year);
+                tgChatPort.update(mapper.toCoreTgChat(chat));
             }
         } catch (Exception e){}
 
+        if (isValid){
+            goToYearOptions(chatId, "set successfully\nchose year options");
+        } else {
+            goToYearOptions(chatId, "invalid value\nchose year options");
+        }
+    }
+
+    private void handleWaitingForPriceOptionCase(long chatId, String text){
+        switch (text){
+            case "price_from":
+                goToPriceFromEntering(chatId, "enter price_from");
+                break;
+            case "price_to":
+                goToPriceToEntering(chatId, "enter price_to");
+                break;
+            case "submit":
+                goToFilterMainMenu(chatId, "current filters:\n"
+                    + mapper.toBotChat(tgChatPort.get(chatId).orElseThrow()).getFilters().toString()
+                    + "\nchoose filter to set");
+                break;
+        }
+    }
+
+    private void handleWaitingForPriceFromCase(long chatId, String text){
+        boolean isValid = false;
+
+        try {
+            int price = Integer.parseInt(text);
+            Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
+            if (price >= 0 && chat.getFilters().getPriceTo() >= price){
+                isValid = true;
+                chat.getFilters().setPriceFrom(price);
+            }
+            tgChatPort.update(mapper.toCoreTgChat(chat));
+        } catch (Exception e) {}
+
+        if (isValid){
+            goToPriceOptions(chatId, "set successfully\nchose price options");
+        } else {
+            goToPriceOptions(chatId, "invalid value\nchose price options");
+        }
+    }
+
+    private void handleWaitingForPriceToCase(long chatId, String text){
+        boolean isValid = false;
+
+        try {
+            int price = Integer.parseInt(text);
+            Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
+            if (price >= 0 && chat.getFilters().getPriceFrom() <= price){
+                isValid = true;
+                chat.getFilters().setPriceTo(price);
+            }
+            tgChatPort.update(mapper.toCoreTgChat(chat));
+        } catch (Exception e) {}
+
+        if (isValid){
+            goToPriceOptions(chatId, "set successfully\nchose price options");
+        } else {
+            goToPriceOptions(chatId, "invalid value\nchose price options");
+        }
+    }
+
+    private void handleWaitingForRegionCase(long chatId, String text){
+        if (text.equals("submit")) {
+            goToFilterMainMenu(chatId, "current filters:\n"
+                + mapper.toBotChat(tgChatPort.get(chatId).orElseThrow()).getFilters().toString()
+                + "\nchoose filter to set");
+            return;
+        }
+
+        goToRegions(chatId, text, "chose regions", true);
+    }
+
+    private void handleWaitingForCityCase(long chatId, String text){
+        if (text.equals("submit")) {
+            goToFilterMainMenu(chatId, "current filters:\n"
+                + mapper.toBotChat(tgChatPort.get(chatId).orElseThrow()).getFilters().toString()
+                + "\nchoose filter to set");
+            return;
+        }
+
+        goToCities(chatId, text, "chose cities", true);
+    }
+
+    private void goToMainMenu(long chatId, String message){
+        Queue<ChatKeyboardButton> row = new LinkedList<>();
+        row.add(new ChatKeyboardButton("run"));
+        row.add(new ChatKeyboardButton("set filters"));
+        row.add(new ChatKeyboardButton("/stop"));
+
+        List<Queue<ChatKeyboardButton>> buttons = new ArrayList<>();
+        buttons.add(row);
+
+        int messageId = notificationService.notifyWithKeyboardButtons(chatId, message, buttons);
+
+        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
+        chat.setState(ChatState.IDLE);
+        chat.setLastMessageId(messageId);
+        tgChatPort.update(mapper.toCoreTgChat(chat));
+    }
+
+    private void goToFilterMainMenu (long chatId, String message) {
+        Queue<ChatInlineButton> row1 = new LinkedList<>();
+        row1.add(new ChatInlineButton("Region", "region"));
+        row1.add(new ChatInlineButton("City", "city"));
+        Queue<ChatInlineButton> row2 = new LinkedList<>();
+        row2.add(new ChatInlineButton("Price", "price"));
+        row2.add(new ChatInlineButton("Year", "year"));
+        Queue<ChatInlineButton> row3 = new LinkedList<>();
+        row3.add(new ChatInlineButton("to main menu", "to main menu"));
+
         List<Queue<ChatInlineButton>> buttons = new ArrayList<>();
-        Queue<ChatInlineButton> row = new LinkedList<>();
-        row.add(new ChatInlineButton("year from", "year_from"));
-        row.add(new ChatInlineButton("year to", "year_to"));
+        buttons.add(row1);
+        buttons.add(row2);
+        buttons.add(row3);
+
+        int messageId = notificationService.notifyWithInlineButtons(chatId, message, buttons);
+
+        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
+        chat.setState(ChatState.WAITING_FOR_FILTER_OPTION);
+        chat.setLastMessageId(messageId);
+        tgChatPort.update(mapper.toCoreTgChat(chat));
+    }
+
+    private void goToNotifying (long chatId, String message) {
+        Queue<ChatKeyboardButton> row = new LinkedList<>();
+        row.add(new ChatKeyboardButton("stop"));
+
+        List<Queue<ChatKeyboardButton>> buttons = new ArrayList<>();
+        buttons.add(row);
+
+        int messageId = notificationService.notifyWithKeyboardButtons(chatId, message, buttons);
+
+        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
+        chat.setState(ChatState.NOTIFYING);
+        chat.setLastMessageId(messageId);
+        tgChatPort.update(mapper.toCoreTgChat(chat));
+    }
+
+    private void goToInactive (long chatId, String message) {
+        Queue<ChatKeyboardButton> row = new LinkedList<>();
+        row.add(new ChatKeyboardButton("/start"));
+
+        List<Queue<ChatKeyboardButton>> buttons = new ArrayList<>();
+        buttons.add(row);
+
+        int messageId = notificationService.notifyWithKeyboardButtons(chatId, message, buttons);
+
+        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
+        chat.setState(ChatState.INACTIVE);
+        chat.setLastMessageId(messageId);
+        tgChatPort.update(mapper.toCoreTgChat(chat));
+    }
+
+    private void goToRegions (long chatId, String message){
+        goToRegions(chatId, "", message, false);
+    }
+    
+    private void goToRegions (long chatId, String text, String message, boolean isUpdate) {
+        var chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
+        List<Queue<ChatInlineButton>> buttons = new ArrayList<>();
+
+        if (isUpdate){
+            Optional<Region> region = regions.stream().filter(r -> r.name().equals(text)).findFirst();
+            if (region.isPresent()){
+                chat.getFilters().toggleRegion(region.get());
+            } else {
+                return;
+            }
+        }
+
+        for (Region region : regions){
+            Queue<ChatInlineButton> row = new LinkedList<>();
+            row.add(new ChatInlineButton(
+                    (chat.getFilters().getRegions().contains(region) ? "🟢 " : "⭕️ ") + region.name(),
+                    region.name()));
+            buttons.add(row);
+        }
         Queue<ChatInlineButton> row1 = new LinkedList<>();
         row1.add(new ChatInlineButton("submit", "submit"));
+        buttons.add(row1);
+        
+        if (isUpdate){
+            notificationService.editWithInlineButtons(chatId, chat.getLastMessageId(), message, buttons);
+        } else {
+            int messageId = notificationService.notifyWithInlineButtons(chatId, message, buttons);
+            chat.setLastMessageId(messageId);
+            chat.setState(ChatState.WAITING_FOR_REGION);
+        }
+
+        tgChatPort.update(mapper.toCoreTgChat(chat));
+    }
+
+    private void goToCities (long chatId, String message){
+        goToCities(chatId, "", message, false);
+    }
+
+    private void goToCities (long chatId, String text, String message, boolean isUpdate) {
+        var chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
+        List<Queue<ChatInlineButton>> buttons = new ArrayList<>();
+
+        if (isUpdate){
+            Optional<City> city = cities.stream().filter(c -> c.name().equals(text)).findFirst();
+            if (city.isPresent()){
+                chat.getFilters().toggleCity(city.get());
+                tgChatPort.update(mapper.toCoreTgChat(chat));
+                chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
+            } else {
+                return;
+            }
+        }
+
+        for (City city : cities){
+            Queue<ChatInlineButton> row = new LinkedList<>();
+            row.add(new ChatInlineButton(
+                    (chat.getFilters().getCities().contains(city) ? "🟢 " : "⭕️ ") + city.name(),
+                    city.name()));
+            buttons.add(row);
+        }
+        Queue<ChatInlineButton> row = new LinkedList<>();
+        row.add(new ChatInlineButton("submit", "submit"));
+        buttons.add(row);
+
+        if (isUpdate){
+            notificationService.editWithInlineButtons(chatId, chat.getLastMessageId(), message, buttons);
+        } else {
+            int messageId = notificationService.notifyWithInlineButtons(chatId, message, buttons);
+            chat.setLastMessageId(messageId);
+            chat.setState(ChatState.WAITING_FOR_CITY);
+        }
+
+        tgChatPort.update(mapper.toCoreTgChat(chat));
+    }
+
+    private void goToPriceOptions (long chatId, String message) {
+        Queue<ChatInlineButton> row = new LinkedList<>();
+        row.add(new ChatInlineButton("price from", "price_from"));
+        row.add(new ChatInlineButton("price to", "price_to"));
+        Queue<ChatInlineButton> row1 = new LinkedList<>();
+        row1.add(new ChatInlineButton("submit", "submit"));
+
+        List<Queue<ChatInlineButton>> buttons = new ArrayList<>();
         buttons.add(row);
         buttons.add(row1);
 
-        if (valid){
-            messageId = notificationService.notifyWithInlineButtons(chatId, "set successfully\nchose year options", buttons);
-        } else {
-            messageId = notificationService.notifyWithInlineButtons(chatId, "invalid value\nchose year options", buttons);
-        }
+        int messageId = notificationService.notifyWithInlineButtons(chatId, message, buttons);
 
+        var chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
+        chat.setState(ChatState.WAITING_FOR_PRICE_OPTION);
+        chat.setLastMessageId(messageId);
+        tgChatPort.update(mapper.toCoreTgChat(chat));
+    }
+
+    private void goToYearOptions (long chatId, String message) {
+        Queue<ChatInlineButton> row1 = new LinkedList<>();
+        row1.add(new ChatInlineButton("year from", "year_from"));
+        row1.add(new ChatInlineButton("year to", "year_to"));
+        Queue<ChatInlineButton> row2 = new LinkedList<>();
+        row2.add(new ChatInlineButton("submit", "submit"));
+
+        List<Queue<ChatInlineButton>> buttons = new ArrayList<>();
+        buttons.add(row1);
+        buttons.add(row2);
+
+        int messageId = notificationService.notifyWithInlineButtons(chatId, message, buttons);
+
+        var chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
         chat.setState(ChatState.WAITING_FOR_YEAR_OPTION);
         chat.setLastMessageId(messageId);
         tgChatPort.update(mapper.toCoreTgChat(chat));
     }
 
-    private void handleWaitingForPriceOptionCase(long chatId, String text){
-        List<Queue<ChatInlineButton>> buttons = new ArrayList<>();
-        int messageId;
-        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
-
-        switch (text){
-            case "price_from":
-                Queue<ChatInlineButton> row = new LinkedList<>();
-                row.add(new ChatInlineButton("back", "back"));
-                buttons.add(row);
-                messageId = notificationService.notifyWithInlineButtons(chatId, "enter price_from", buttons);
-                chat.setState(ChatState.WAITING_FOR_PRICE_FROM);
-                chat.setLastMessageId(messageId);
-                break;
-            case "price_to":
-                Queue<ChatInlineButton> row1 = new LinkedList<>();
-                row1.add(new ChatInlineButton("back", "back"));
-                buttons.add(row1);
-                messageId = notificationService.notifyWithInlineButtons(chatId, "enter price_to", buttons);
-                chat.setState(ChatState.WAITING_FOR_PRICE_TO);
-                chat.setLastMessageId(messageId);
-                break;
-            case "submit":
-                Queue<ChatInlineButton> row2 = new LinkedList<>();
-                row2.add(new ChatInlineButton("Region", "region"));
-                row2.add(new ChatInlineButton("City", "city"));
-                Queue<ChatInlineButton> row3 = new LinkedList<>();
-                row3.add(new ChatInlineButton("Price", "price"));
-                row3.add(new ChatInlineButton("Year", "year"));
-                buttons.add(row2);
-                buttons.add(row3);
-                messageId = notificationService.notifyWithInlineButtons(
-                        chatId, "current filters:\nchoose filter to set", buttons);
-                chat.setState(ChatState.WAITING_FOR_FILTER_OPTION);
-                chat.setLastMessageId(messageId);
-                break;
-        }
-
-        tgChatPort.update(mapper.toCoreTgChat(chat));
-    }
-
-    private void handleWaitingForPriceFromCase(long chatId, String text){
-        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
-        boolean valid = false;
-        int messageId;
-        int price;
-
-        try {
-            price = Integer.parseInt(text);
-            if (price >= 0 && chat.getFilters().getPriceTo() >= price){
-                valid = true;
-                chat.getFilters().setPriceFrom(price);
-            }
-        } catch (Exception e) {}
-
-        List<Queue<ChatInlineButton>> buttons = new ArrayList<>();
+    private void goToYearFromEntering (long chatId, String message) {
         Queue<ChatInlineButton> row = new LinkedList<>();
-        row.add(new ChatInlineButton("price from", "price_from"));
-        row.add(new ChatInlineButton("price to", "price_to"));
-        Queue<ChatInlineButton> row1 = new LinkedList<>();
-        row1.add(new ChatInlineButton("submit", "submit"));
+        row.add(new ChatInlineButton("back", "back"));
+        List<Queue<ChatInlineButton>> buttons = new ArrayList<>();
         buttons.add(row);
-        buttons.add(row1);
 
-        if (valid){
-            messageId = notificationService.notifyWithInlineButtons(chatId, "set successfully\nchose price options", buttons);
-        } else {
-            messageId = notificationService.notifyWithInlineButtons(chatId, "invalid value\nchose price options", buttons);
-        }
+        int messageId = notificationService.notifyWithInlineButtons(chatId, message, buttons);
 
-        chat.setState(ChatState.WAITING_FOR_PRICE_OPTION);
+        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
+        chat.setState(ChatState.WAITING_FOR_YEAR_FROM);
         chat.setLastMessageId(messageId);
         tgChatPort.update(mapper.toCoreTgChat(chat));
     }
 
-    private void handleWaitingForPriceToCase(long chatId, String text){
-        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
-        boolean valid = false;
-        int messageId;
-        int price;
-
-        try {
-            price = Integer.parseInt(text);
-            if (price >= 0 && chat.getFilters().getPriceFrom() <= price){
-                valid = true;
-                chat.getFilters().setPriceFrom(price);
-            }
-        } catch (Exception e) {}
-
-        List<Queue<ChatInlineButton>> buttons = new ArrayList<>();
-        Queue<ChatInlineButton> row = new LinkedList<>();
-        row.add(new ChatInlineButton("price from", "price_from"));
-        row.add(new ChatInlineButton("price to", "price_to"));
+    private void goToYearToEntering (long chatId, String message) {
         Queue<ChatInlineButton> row1 = new LinkedList<>();
-        row1.add(new ChatInlineButton("submit", "submit"));
-        buttons.add(row);
+        row1.add(new ChatInlineButton("back", "back"));
+        List<Queue<ChatInlineButton>> buttons = new ArrayList<>();
         buttons.add(row1);
 
-        if (valid){
-            messageId = notificationService.notifyWithInlineButtons(chatId, "set successfully\nchose price options", buttons);
-        } else {
-            messageId = notificationService.notifyWithInlineButtons(chatId, "invalid value\nchose price options", buttons);
-        }
+        int messageId = notificationService.notifyWithInlineButtons(chatId, message, buttons);
 
-        chat.setState(ChatState.WAITING_FOR_PRICE_OPTION);
+        Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
+        chat.setState(ChatState.WAITING_FOR_YEAR_TO);
         chat.setLastMessageId(messageId);
         tgChatPort.update(mapper.toCoreTgChat(chat));
     }
 
-    private void handleWaitingForRegionCase(long chatId, String text){
+    private void goToPriceFromEntering (long chatId, String message) {
+        Queue<ChatInlineButton> row = new LinkedList<>();
+        row.add(new ChatInlineButton("back", "back"));
+        List<Queue<ChatInlineButton>> buttons = new ArrayList<>();
+        buttons.add(row);
+
+        int messageId = notificationService.notifyWithInlineButtons(chatId, message, buttons);
+
         Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
-        int messageId;
-
-        if (text.equals("submit")) {
-            List<Queue<ChatInlineButton>> buttons1 = new ArrayList<>();
-            Queue<ChatInlineButton> row1 = new LinkedList<>();
-            row1.add(new ChatInlineButton("Region", "region"));
-            row1.add(new ChatInlineButton("City", "city"));
-            Queue<ChatInlineButton> row2 = new LinkedList<>();
-            row2.add(new ChatInlineButton("Price", "price"));
-            row2.add(new ChatInlineButton("Year", "year"));
-            buttons1.add(row1);
-            buttons1.add(row2);
-
-            messageId = notificationService.notifyWithInlineButtons(
-                    chatId, "current filters:\nchoose filter to set", buttons1);
-            chat.setState(ChatState.WAITING_FOR_FILTER_OPTION);
-            chat.setLastMessageId(messageId);
-            return;
-        }
-
-        if (regions.contains(text)){
-            chat.getFilters().toggleRegion(text);
-            List<Queue<ChatInlineButton>> buttons = new ArrayList<>();
-            for (String region : regions){
-                Queue<ChatInlineButton> row = new LinkedList<>();
-                row.add(new ChatInlineButton(
-                        (chat.getFilters().getRegions().contains(region) ? "🟢 " : "⭕️ ") + region,
-                        region));
-                buttons.add(row);
-            }
-            Queue<ChatInlineButton> row2 = new LinkedList<>();
-            row2.add(new ChatInlineButton("submit", "submit"));
-            buttons.add(row2);
-            notificationService.editWithInlineButtons(chatId, chat.getLastMessageId(), "chose regions", buttons);
-        }
-
+        chat.setState(ChatState.WAITING_FOR_PRICE_FROM);
+        chat.setLastMessageId(messageId);
         tgChatPort.update(mapper.toCoreTgChat(chat));
     }
 
-    private void handleWaitingForCityCase(long chatId, String text){
+    private void goToPriceToEntering (long chatId, String message) {
+        Queue<ChatInlineButton> row = new LinkedList<>();
+        row.add(new ChatInlineButton("back", "back"));
+        List<Queue<ChatInlineButton>> buttons = new ArrayList<>();
+        buttons.add(row);
+
+        int messageId = notificationService.notifyWithInlineButtons(chatId, message, buttons);
+
         Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
-        int messageId;
-
-        if (text.equals("submit")) {
-            List<Queue<ChatInlineButton>> buttons1 = new ArrayList<>();
-            Queue<ChatInlineButton> row1 = new LinkedList<>();
-            row1.add(new ChatInlineButton("Region", "region"));
-            row1.add(new ChatInlineButton("City", "city"));
-            Queue<ChatInlineButton> row2 = new LinkedList<>();
-            row2.add(new ChatInlineButton("Price", "price"));
-            row2.add(new ChatInlineButton("Year", "year"));
-            buttons1.add(row1);
-            buttons1.add(row2);
-
-            messageId = notificationService.notifyWithInlineButtons(
-                    chatId, "current filters:\nchoose filter to set", buttons1);
-            chat.setState(ChatState.WAITING_FOR_FILTER_OPTION);
-            chat.setLastMessageId(messageId);
-            return;
-        }
-
-        if (cities.contains(text)){
-            chat.getFilters().toggleCity(text);
-            List<Queue<ChatInlineButton>> buttons = new ArrayList<>();
-            for (String city : cities){
-                Queue<ChatInlineButton> row = new LinkedList<>();
-                row.add(new ChatInlineButton(
-                        (chat.getFilters().getCities().contains(city) ? "🟢 " : "⭕️ ") + city,
-                        city));
-                buttons.add(row);
-            }
-            Queue<ChatInlineButton> row2 = new LinkedList<>();
-            row2.add(new ChatInlineButton("submit", "submit"));
-            buttons.add(row2);
-            notificationService.editWithInlineButtons(chatId, chat.getLastMessageId(), "chose cities", buttons);
-        }
-
+        chat.setState(ChatState.WAITING_FOR_PRICE_TO);
+        chat.setLastMessageId(messageId);
         tgChatPort.update(mapper.toCoreTgChat(chat));
     }
 }
