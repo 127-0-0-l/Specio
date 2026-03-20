@@ -1,5 +1,6 @@
 package io.github._127_0_0_l.infra_tg_bot.services;
 
+import io.github._127_0_0_l.core.constants.ValidationConstants;
 import io.github._127_0_0_l.core.ports.out.db.CitiesPort;
 import io.github._127_0_0_l.core.ports.out.db.RegionsPort;
 import io.github._127_0_0_l.core.ports.out.db.TgChatPort;
@@ -173,7 +174,7 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
         try {
             int year = Integer.parseInt(text);
             Chat chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
-            if (year >= 1900 && chat.getFilters().getYearTo() >= year){
+            if (year >= ValidationConstants.MIN_YEAR_VALUE && chat.getFilters().getYearTo() >= year){
                 isValid = true;
                 chat.getFilters().setYearFrom(year);
                 tgChatPort.update(mapper.toCoreTgChat(chat));
