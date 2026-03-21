@@ -12,8 +12,8 @@ public class VehicleAdvertFilterService implements VehicleAdvertFilter {
     @Override
     public List<VehicleAdvert> filter(List<VehicleAdvert> adverts, Filters filters) {
         var stream = adverts.stream()
-                .filter(a -> a.priceSecondary() >= filters.priceFrom()
-                        && a.priceSecondary() <= filters.priceTo())
+                .filter(a -> a.pricePrimary() >= filters.priceFrom()
+                        && a.pricePrimary() <= filters.priceTo())
                 .filter(a -> a.year() >= filters.yearFrom()
                         && a.year() <= filters.yearTo());
 

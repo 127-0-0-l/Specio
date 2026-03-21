@@ -19,7 +19,6 @@ import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -81,13 +80,15 @@ public class HtmlParserService implements HtmlParser {
         Pattern pattern = Pattern.compile("(\\d+)");
         Matcher matcher = pattern.matcher(input);
 
-        if (matcher.find()) {
-            String num = "";
-            for (int i = 0; i < matcher.groupCount(); i++){
-                num += matcher.group(i + 1);
-            }
+        String num = "";
+        while (matcher.find()){
+            num += matcher.group();
+        }
+
+        if (num.length() > 0) {
             return Integer.parseInt(num);
         }
+
         return 0;
     }
 
@@ -154,8 +155,8 @@ public class HtmlParserService implements HtmlParser {
 
     private String getValue(Element element, ContentType contentType){
         return switch (contentType) {
-            case ContentType.TEXT -> element.text();
-            case ContentType.HREF -> element.attr("abs:href");
+            case TEXT -> element.text();
+            case HREF -> element.attr("abs:href");
             default -> "";
         };
     }

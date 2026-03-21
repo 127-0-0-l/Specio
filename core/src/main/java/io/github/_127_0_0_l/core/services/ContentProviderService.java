@@ -47,6 +47,7 @@ public class ContentProviderService {
         log.info("start getting data");
         Optional<ContentSource> source = contentSourcePort.get(Long.valueOf(1));
         if (source.isEmpty()){
+            log.warn("source not found");
             return;
         }
 
