@@ -1,5 +1,7 @@
 package io.github._127_0_0_l.infra_parser.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -8,17 +10,25 @@ import io.github._127_0_0_l.infra_parser.interfaces.HtmlParser;
 import io.github._127_0_0_l.infra_parser.models.ContentType;
 import io.github._127_0_0_l.infra_parser.models.HtmlParserConfig;
 import io.github._127_0_0_l.infra_parser.models.Selector;
+import io.github._127_0_0_l.infra_parser.models.VehicleAdvert;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Component
 public class HtmlParserService implements HtmlParser {
+    @Override
     public String parse(String url, String html, HtmlParserConfig config){
         ObjectMapper mapper = new ObjectMapper();
         Document document = Jsoup.parse(html, url);
@@ -31,6 +41,70 @@ public class HtmlParserService implements HtmlParser {
             fillRootNode(object, document, config.selectors());
             return object.toString();
         }
+    }
+
+    @Override
+    public List<VehicleAdvert> parseVehicleAdverts(String url, String html, HtmlParserConfig config) {
+        String json = parse(url, html, config);
+
+        ObjectMapper mapper = new ObjectMapper();
+        List<Map<String, Object>> rawData;
+        try {
+            rawData = mapper.readValue(json, new TypeReference<List<Map<String, Object>>>(){});
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        List<VehicleAdvert> adverts = new ArrayList<>();
+        for (var rawItem : rawData){
+            String name = (String) rawItem.get("name");
+            String description = (String) rawItem.get("description");
+            String params = (String) rawItem.get("params");
+            String city = "";
+            String link = (String) rawItem.get("url");
+            int pricePrimary = parsePrice((String) rawItem.get("price"));
+            int priceSecondary = 0;
+            int year = parseYear(params);
+            var newAdvert = new VehicleAdvert(
+                    name, description, params, city, link, pricePrimary, priceSecondary, year);
+            adverts.add(newAdvert);
+        }
+
+        return adverts;
+    }
+
+    private int parsePrice (String input){
+        if (input == null){
+            return 0;
+        }
+
+        Pattern pattern = Pattern.compile("(\\d+)");
+        Matcher matcher = pattern.matcher(input);
+
+        if (matcher.find()) {
+            String num = "";
+            for (int i = 0; i < matcher.groupCount(); i++){
+                num += matcher.group(i + 1);
+            }
+            return Integer.parseInt(num);
+        }
+        return 0;
+    }
+
+    private int parseYear (String input) {
+        if (input == null){
+            return 0;
+        }
+
+        Pattern pattern = Pattern.compile("(\\d{4}) *г[. ]");
+        Matcher matcher = pattern.matcher(input);
+
+        if (matcher.find()) {
+            int year = Integer.parseInt(matcher.group(1));
+            matcher.replaceFirst("");
+            return year;
+        }
+        return 0;
     }
 
     private void fillRootNode(ObjectNode root, Element element, List<Selector> selectors){

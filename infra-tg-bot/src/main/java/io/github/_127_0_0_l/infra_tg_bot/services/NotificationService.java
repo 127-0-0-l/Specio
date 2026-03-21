@@ -2,6 +2,7 @@ package io.github._127_0_0_l.infra_tg_bot.services;
 
 import io.github._127_0_0_l.infra_tg_bot.models.ChatInlineButton;
 import io.github._127_0_0_l.infra_tg_bot.models.ChatKeyboardButton;
+import io.github._127_0_0_l.infra_tg_bot.models.VehicleAdvert;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
@@ -27,6 +28,27 @@ public class NotificationService implements io.github._127_0_0_l.infra_tg_bot.in
     public int notify(long chatId, String text){
         SendMessage message = SendMessage.builder()
                 .chatId(chatId)
+                .text(text)
+                .build();
+
+        return notify(message);
+    }
+
+    public int notify(long chatId, VehicleAdvert model){
+        StringBuilder sb = new StringBuilder();
+        sb.append("*").append(model.name()).append("*\n\n");
+        sb.append("*Цена:* ").append(model.pricePrimary()).append(" р.\n");
+        sb.append("*Год:* ").append(model.year()).append("\n");
+        sb.append("*Город:* ").append(model.city()).append("\n");
+        sb.append("*Характеристики:* ").append(model.params()).append("\n");
+        sb.append("*Описание:* ").append(model.description()).append("\n");
+        sb.append("*Ссылка:* ").append(model.url());
+
+        String text =  sb.toString().replaceAll("([_\\[\\]()~`>#+\\-=|{}.!])", "\\\\$1");
+
+        SendMessage message = SendMessage.builder()
+                .chatId(chatId)
+                .parseMode("MarkdownV2")
                 .text(text)
                 .build();
 

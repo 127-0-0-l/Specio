@@ -2,9 +2,10 @@ package io.github._127_0_0_l.core.services;
 
 import io.github._127_0_0_l.core.models.ChatState;
 import io.github._127_0_0_l.core.models.ContentSource;
-import io.github._127_0_0_l.core.models.Notification;
 import io.github._127_0_0_l.core.ports.out.ContentProviderPort;
+import io.github._127_0_0_l.core.ports.out.FilterPort;
 import io.github._127_0_0_l.core.ports.out.NotificationPort;
+import io.github._127_0_0_l.core.ports.out.ParserPort;
 import io.github._127_0_0_l.core.ports.out.db.ContentSourcePort;
 
 import io.github._127_0_0_l.core.ports.out.db.TgChatPort;
@@ -17,22 +18,25 @@ import java.util.Optional;
 @Service
 public class ContentProviderService {
     private final ContentProviderPort contentProvider;
-    private final ParserService parserService;
+    private final ParserPort parserPort;
     private final ContentSourcePort contentSourcePort;
     private final TgChatPort tgChatPort;
     private final NotificationPort notificationPort;
+    private final FilterPort filterPort;
 
     public ContentProviderService(
             ContentProviderPort contentProvider,
-            ParserService parserService,
+            ParserPort parserPort,
             ContentSourcePort contentSourcePort,
             TgChatPort tgChatPort,
-            NotificationPort notificationPort){
+            NotificationPort notificationPort,
+            FilterPort filterPort){
         this.contentProvider = contentProvider;
-        this.parserService = parserService;
+        this.parserPort = parserPort;
         this.contentSourcePort = contentSourcePort;
         this.tgChatPort = tgChatPort;
         this.notificationPort = notificationPort;
+        this.filterPort = filterPort;
     }
 
     public String getContent(ContentSource source){
@@ -40,22 +44,26 @@ public class ContentProviderService {
     }
 
     public void showContent(){
+        log.info("start getting data");
         Optional<ContentSource> source = contentSourcePort.get(Long.valueOf(1));
         if (source.isEmpty()){
             return;
         }
 
         String content = contentProvider.getContent(source.get().id());
+        log.info("data resieved");
         //PrintStream out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
         //out.println(content);
 
         var chats = tgChatPort.getByState(ChatState.NOTIFYING);
-        var result = parserService.parse(source.get().id(), content);
+        var result = parserPort.parse(source.get().id(), content);
+        log.info("data parsed. number of items: " + result.size());
 
         for (var chat : chats){
-            for (var item : result){
-                var notification = new Notification(chat.id(), item);
-                notificationPort.Notify(notification);
+            var filtered = filterPort.filterVehicleAdverts(result, chat.filters());
+            log.info(filtered.size() + " filtered items for chat " + chat.id());
+            for (var item : filtered){
+                notificationPort.notify(chat.id(), item);
             }
         }
     }

@@ -21,4 +21,6 @@ public interface TgBotMapper {
 
     List<City> toCoreCities (List<io.github._127_0_0_l.infra_tg_bot.models.City> model);
     List<io.github._127_0_0_l.infra_tg_bot.models.City> toBotCities (List<City> model);
+
+    io.github._127_0_0_l.infra_tg_bot.models.VehicleAdvert toBotVehicleAdvert (VehicleAdvert model);
 }

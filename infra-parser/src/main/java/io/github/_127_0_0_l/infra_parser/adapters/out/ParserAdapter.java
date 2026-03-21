@@ -1,7 +1,6 @@
 package io.github._127_0_0_l.infra_parser.adapters.out;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github._127_0_0_l.core.models.VehicleAdvert;
 import io.github._127_0_0_l.core.ports.out.db.ContentSourcePort;
 import io.github._127_0_0_l.infra_parser.interfaces.ParserMapper;
 import io.github._127_0_0_l.infra_parser.interfaces.HtmlParser;
@@ -15,51 +14,33 @@ import java.util.List;
 @Component
 public class ParserAdapter implements ParserPort {
 
-    private final ParserMapper coreMapper;
+    private final ParserMapper mapper;
     private final HtmlParser htmlParser;
     private final ParserConfigPort parserConfigPort;
     private final ContentSourcePort contentSourcePort;
 
     public ParserAdapter(
-            ParserMapper coreMapper,
+            ParserMapper mapper,
             HtmlParser htmlParser,
             ParserConfigPort parserConfigPort,
             ContentSourcePort contentSourcePort){
-        this.coreMapper = coreMapper;
+        this.mapper = mapper;
         this.htmlParser = htmlParser;
         this.parserConfigPort = parserConfigPort;
         this.contentSourcePort = contentSourcePort;
     }
 
     @Override
-    public List<String> parse(Long sourceId, String content) {
+    public List<VehicleAdvert> parse(Long sourceId, String content) {
         var parserConfig = parserConfigPort.get(sourceId);
         var source = contentSourcePort.get(sourceId);
         if (parserConfig.isEmpty() && source.isEmpty()){
             return new ArrayList<>();
         }
 
-        var htmlParserConfig = coreMapper.toHtmlParserConfig(parserConfig.get());
+        var htmlParserConfig = mapper.toHtmlParserConfig(parserConfig.get());
         String url = source.get().source();
-        String json = htmlParser.parse(url, content, htmlParserConfig);
-        return toVehicleAdvert(json);
-    }
-
-    private List<String> toVehicleAdvert(String json){
-        ObjectMapper mapper = new ObjectMapper();
-        Object[] array;
-
-        try {
-            array = mapper.readValue(json, Object[].class);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
-
-        List<String> result = new ArrayList<>();
-        for (var item : array){
-            result.add(item.toString());
-        }
-
-        return result;
+        var adverts = htmlParser.parseVehicleAdverts(url, content, htmlParserConfig);
+        return mapper.toCoreVehicleAdverts(adverts);
     }
 }
