@@ -1,6 +1,5 @@
 package io.github._127_0_0_l.app;
 
-import io.github._127_0_0_l.core.services.ContentProviderService;
 import io.github._127_0_0_l.core.services.SchedulerService;
 
 import org.springframework.boot.SpringApplication;
@@ -17,9 +16,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class SpecioApplication {
     public static void main(String[] args) {
         ApplicationContext context = SpringApplication.run(SpecioApplication.class, args);
-
-        //ContentProviderService contentProviderService = context.getBean(ContentProviderService.class);
-        //contentProviderService.showContent();
 
         SchedulerService schedulerService = context.getBean(SchedulerService.class);
         schedulerService.runScheduler();
