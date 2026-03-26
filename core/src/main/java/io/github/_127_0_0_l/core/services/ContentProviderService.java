@@ -64,7 +64,11 @@ public class ContentProviderService {
             var filtered = filterPort.filterVehicleAdverts(result, chat.filters());
             log.info(filtered.size() + " filtered items for chat " + chat.id());
             for (var item : filtered){
-                notificationPort.notify(chat.id(), item);
+                try {
+                    notificationPort.notify(chat.id(), item);
+                } catch (Exception e) {
+                    log.error("", e.getMessage());
+                }
             }
         }
     }

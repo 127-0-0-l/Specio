@@ -36,7 +36,7 @@ public class NotificationService implements io.github._127_0_0_l.infra_tg_bot.in
 
     public int notify(long chatId, VehicleAdvert model){
         StringBuilder sb = new StringBuilder();
-        sb.append("*").append(model.name()).append("*\n\n");
+        sb.append("🔵\t*").append(model.name()).append("*\n\n");
         sb.append("*Цена:* ").append(model.pricePrimary()).append(" р.\n");
         sb.append("*Год:* ").append(model.year()).append("\n");
         sb.append("*Город:* ").append(model.city()).append("\n");
