@@ -2,12 +2,13 @@ package io.github._127_0_0_l.core.services;
 
 import io.github._127_0_0_l.core.models.ChatState;
 import io.github._127_0_0_l.core.models.ContentSource;
+import io.github._127_0_0_l.core.models.LastRecord;
 import io.github._127_0_0_l.core.ports.out.ContentProviderPort;
 import io.github._127_0_0_l.core.ports.out.FilterPort;
 import io.github._127_0_0_l.core.ports.out.NotificationPort;
 import io.github._127_0_0_l.core.ports.out.ParserPort;
 import io.github._127_0_0_l.core.ports.out.db.ContentSourcePort;
-
+import io.github._127_0_0_l.core.ports.out.db.LastRecordPort;
 import io.github._127_0_0_l.core.ports.out.db.TgChatPort;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ public class ContentProviderService {
     private final TgChatPort tgChatPort;
     private final NotificationPort notificationPort;
     private final FilterPort filterPort;
+    private final LastRecordPort lastRecordPort;
 
     public ContentProviderService(
             ContentProviderPort contentProvider,
@@ -31,13 +33,15 @@ public class ContentProviderService {
             ContentSourcePort contentSourcePort,
             TgChatPort tgChatPort,
             NotificationPort notificationPort,
-            FilterPort filterPort){
+            FilterPort filterPort,
+            LastRecordPort lastRecordPort){
         this.contentProvider = contentProvider;
         this.parserPort = parserPort;
         this.contentSourcePort = contentSourcePort;
         this.tgChatPort = tgChatPort;
         this.notificationPort = notificationPort;
         this.filterPort = filterPort;
+        this.lastRecordPort = lastRecordPort;
     }
 
     public String getContent(ContentSource source){
@@ -60,6 +64,12 @@ public class ContentProviderService {
     
             var chats = tgChatPort.getByState(ChatState.NOTIFYING);
             var result = parserPort.parse(source.id(), content);
+
+            var lastRecord = lastRecordPort.getLastRecord(source.id());
+            if (lastRecord.isPresent()){
+                result = filterPort.filterVehicleAdverts(result, lastRecord.get().recordIdentifier());
+            }
+            lastRecordPort.updateLastRecord(new LastRecord(source, result.getFirst().url()));
             log.info("data parsed. number of items: " + result.size());
     
             for (var chat : chats){

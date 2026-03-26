@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import io.github._127_0_0_l.core.models.*;
 import io.github._127_0_0_l.infra_db.entities.SelectorDataType;
 import io.github._127_0_0_l.infra_db.repositories.CityRepository;
+import io.github._127_0_0_l.infra_db.repositories.ContentSourceRepository;
 import io.github._127_0_0_l.infra_db.repositories.RegionRepository;
 import io.github._127_0_0_l.infra_db.repositories.TgChatRepository;
 
@@ -23,6 +24,8 @@ public abstract class DBMapper {
     protected RegionRepository regionRepository;
     @Autowired
     protected CityRepository cityRepository;
+    @Autowired
+    protected ContentSourceRepository contentSource;
 
     @ObjectFactory
     public io.github._127_0_0_l.infra_db.entities.TgChat createTgChat(TgChat model) {
@@ -37,6 +40,11 @@ public abstract class DBMapper {
     @ObjectFactory
     public io.github._127_0_0_l.infra_db.entities.City resolveCity(City model) {
         return cityRepository.getReferenceById(model.id());
+    }
+
+    @ObjectFactory
+    public io.github._127_0_0_l.infra_db.entities.ContentSource createContentSource(ContentSource model) {
+        return contentSource.findById(model.id()).orElseGet(() -> new io.github._127_0_0_l.infra_db.entities.ContentSource());
     }
 
     public abstract ContentSource toCoreContentSource(io.github._127_0_0_l.infra_db.entities.ContentSource model);
@@ -76,4 +84,7 @@ public abstract class DBMapper {
 
     public abstract List<City> toCoreCities (List<io.github._127_0_0_l.infra_db.entities.City> model);
     public abstract List<io.github._127_0_0_l.infra_db.entities.City> toDBCities (List<City> model);
+
+    public abstract LastRecord toCoreLastRecord (io.github._127_0_0_l.infra_db.entities.LastRecord model);
+    public abstract io.github._127_0_0_l.infra_db.entities.LastRecord toDBLastRecord (LastRecord model);
 }

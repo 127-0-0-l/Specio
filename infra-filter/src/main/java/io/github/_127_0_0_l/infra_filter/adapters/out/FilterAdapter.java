@@ -1,6 +1,7 @@
 package io.github._127_0_0_l.infra_filter.adapters.out;
 
 import io.github._127_0_0_l.core.models.Filters;
+import io.github._127_0_0_l.core.models.LastRecord;
 import io.github._127_0_0_l.core.models.VehicleAdvert;
 import io.github._127_0_0_l.core.ports.out.FilterPort;
 import io.github._127_0_0_l.infra_filter.interfaces.FilterMapper;
@@ -27,5 +28,18 @@ public class FilterAdapter implements FilterPort {
 
         var result = vehicleAdvertFilter.filter(filterAdverts, filterFilters);
         return mapper.toCoreVehicleAdverts(result);
+    }
+
+    @Override
+    public List<VehicleAdvert> filterVehicleAdverts(List<VehicleAdvert> adverts, String lastRecordIdentifier) {
+        var lastRecord = adverts.stream()
+            .filter(a -> a.url().equals(lastRecordIdentifier))
+            .findFirst();
+
+        if (lastRecord.isPresent()){
+            return adverts.subList(0, adverts.indexOf(lastRecord.get()));
+        } else {
+            return adverts;
+        }
     }
 }

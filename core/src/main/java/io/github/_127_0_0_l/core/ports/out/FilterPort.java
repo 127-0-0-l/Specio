@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface FilterPort {
     List<VehicleAdvert> filterVehicleAdverts(List<VehicleAdvert> adverts, Filters filters);
+
+    List<VehicleAdvert> filterVehicleAdverts(List<VehicleAdvert> adverts, String lastRecordIdentifier);
 }

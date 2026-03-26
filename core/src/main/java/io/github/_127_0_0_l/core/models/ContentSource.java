@@ -5,7 +5,4 @@ public record ContentSource(
         String name,
         String source
 ) {
-        public ContentSource (String name, String source){
-                this(null, name, source);
-        }
 }
