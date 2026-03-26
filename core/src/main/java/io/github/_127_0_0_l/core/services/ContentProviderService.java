@@ -12,7 +12,7 @@ import io.github._127_0_0_l.core.ports.out.db.TgChatPort;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -46,30 +46,32 @@ public class ContentProviderService {
 
     public void showContent(){
         log.info("start getting data");
-        Optional<ContentSource> source = contentSourcePort.get(Long.valueOf(1));
-        if (source.isEmpty()){
+        List<ContentSource> sources = contentSourcePort.getAll();
+        if (sources.isEmpty()){
             log.warn("source not found");
             return;
         }
 
-        String content = contentProvider.getContent(source.get().id());
-        log.info("data resieved");
-        //PrintStream out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
-        //out.println(content);
-
-        var chats = tgChatPort.getByState(ChatState.NOTIFYING);
-        var result = parserPort.parse(source.get().id(), content);
-        log.info("data parsed. number of items: " + result.size());
-
-        for (var chat : chats){
-            var filtered = filterPort.filterVehicleAdverts(result, chat.filters());
-            log.info(filtered.size() + " filtered items for chat " + chat.id());
-            for (var item : filtered){
-                try {
-                    notificationPort.notify(chat.id(), item);
-                    TimeUnit.SECONDS.sleep(1);
-                } catch (Exception e) {
-                    log.error("", e.getMessage());
+        for (var source : sources){
+            String content = contentProvider.getContent(source.id());
+            log.info("data resieved");
+            //PrintStream out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
+            //out.println(content);
+    
+            var chats = tgChatPort.getByState(ChatState.NOTIFYING);
+            var result = parserPort.parse(source.id(), content);
+            log.info("data parsed. number of items: " + result.size());
+    
+            for (var chat : chats){
+                var filtered = filterPort.filterVehicleAdverts(result, chat.filters());
+                log.info(filtered.size() + " filtered items for chat " + chat.id());
+                for (var item : filtered){
+                    try {
+                        notificationPort.notify(chat.id(), item);
+                        TimeUnit.SECONDS.sleep(1);
+                    } catch (Exception e) {
+                        log.error("", e.getMessage());
+                    }
                 }
             }
         }

@@ -40,6 +40,7 @@ public abstract class DBMapper {
     }
 
     public abstract ContentSource toCoreContentSource(io.github._127_0_0_l.infra_db.entities.ContentSource model);
+    public abstract List<ContentSource> toCoreContentSources(List<io.github._127_0_0_l.infra_db.entities.ContentSource> model);
     public abstract io.github._127_0_0_l.infra_db.entities.ContentSource toDBContentSource (ContentSource model);
 
     public abstract ParserConfig toCoreParserConfig (io.github._127_0_0_l.infra_db.entities.ParserConfig model);
