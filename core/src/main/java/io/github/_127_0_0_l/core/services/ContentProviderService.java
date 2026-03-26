@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -66,6 +67,7 @@ public class ContentProviderService {
             for (var item : filtered){
                 try {
                     notificationPort.notify(chat.id(), item);
+                    TimeUnit.SECONDS.sleep(1);
                 } catch (Exception e) {
                     log.error("", e.getMessage());
                 }
