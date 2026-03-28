@@ -10,6 +10,7 @@ import io.github._127_0_0_l.core.models.ChatState;
 import io.github._127_0_0_l.core.models.ContentSource;
 import io.github._127_0_0_l.core.models.LastRecord;
 import io.github._127_0_0_l.core.models.NewRecordsCountLog;
+import io.github._127_0_0_l.core.models.NewRecordsCountLogDTO;
 import io.github._127_0_0_l.core.ports.in.SchedulerUseCase;
 import io.github._127_0_0_l.core.ports.out.ContentProviderPort;
 import io.github._127_0_0_l.core.ports.out.FilterPort;
@@ -54,7 +55,7 @@ public class FetchNotifyService implements SchedulerUseCase {
     }
 
     @Override
-    public Optional<NewRecordsCountLog> runFetchAndNotify(Long contentSourceId) {
+    public Optional<NewRecordsCountLogDTO> runFetchAndNotify(Long contentSourceId) {
         log.info("start getting data");
         Optional<ContentSource> osource = contentSourcePort.get(contentSourceId);
         if (osource.isEmpty()){
@@ -94,7 +95,7 @@ public class FetchNotifyService implements SchedulerUseCase {
             }
         }
 
-        return Optional.of(new NewRecordsCountLog(executionTime, source.id(), result.size()));
+        return Optional.of(new NewRecordsCountLogDTO(source.id(), executionTime, result.size()));
     }
 
     @Override

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import io.github._127_0_0_l.infra_scheduler.interfaces.SchedulerMapper;
 import io.github._127_0_0_l.infra_scheduler.models.NewRecordsCountLog;
+import io.github._127_0_0_l.infra_scheduler.models.NewRecordsCountLogDTO;
 import io.github._127_0_0_l.core.ports.in.SchedulerUseCase;
 
 @Component
@@ -20,10 +21,10 @@ public class SchedulerUseCaseService {
         this.mapper = mapper;
     }
 
-    public Optional<NewRecordsCountLog> runFetchAndNotify(Long sourceId){
+    public Optional<NewRecordsCountLogDTO> runFetchAndNotify(Long sourceId){
         var result = schedulerUseCase.runFetchAndNotify(sourceId);
         if (result.isPresent()){
-            return Optional.of(mapper.toSchedulerNewRecordsCountLog(result.get()));
+            return Optional.of(mapper.toSchedulerNewRecordsCountLogDTO(result.get()));
         } else {
             return Optional.empty();
         }

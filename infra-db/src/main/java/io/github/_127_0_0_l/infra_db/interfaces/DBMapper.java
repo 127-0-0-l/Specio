@@ -93,7 +93,12 @@ public abstract class DBMapper {
     public abstract io.github._127_0_0_l.infra_db.entities.LastRecord toDBLastRecord (LastRecord model);
 
     public NewRecordsCountLog toCoreNewRecordsCountLog (io.github._127_0_0_l.infra_db.entities.NewRecordsCountLog model) {
-        return new NewRecordsCountLog(model.getDateTime(), model.getContentSource().getId(), model.getRecordsCount());
+        return new NewRecordsCountLog(
+            model.getContentSource().getId(),
+            model.getFirstWeekDay(),
+            model.getWeekSecondsFrom(),
+            model.getWeekSecondsTo(),
+            model.getRecordsCount());
     }
     
     public abstract List<NewRecordsCountLog> toCoreNewRecordsCountLogs (List<io.github._127_0_0_l.infra_db.entities.NewRecordsCountLog> model);
