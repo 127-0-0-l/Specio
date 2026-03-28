@@ -44,7 +44,11 @@ public abstract class DBMapper {
 
     @ObjectFactory
     public io.github._127_0_0_l.infra_db.entities.ContentSource createContentSource(ContentSource model) {
-        return contentSource.findById(model.id()).orElseGet(() -> new io.github._127_0_0_l.infra_db.entities.ContentSource());
+        return map(model.id());
+    }
+
+    io.github._127_0_0_l.infra_db.entities.ContentSource map(Long sourceId) {
+        return contentSource.findById(sourceId).orElseGet(() -> new io.github._127_0_0_l.infra_db.entities.ContentSource());
     }
 
     public abstract ContentSource toCoreContentSource(io.github._127_0_0_l.infra_db.entities.ContentSource model);
@@ -87,4 +91,13 @@ public abstract class DBMapper {
 
     public abstract LastRecord toCoreLastRecord (io.github._127_0_0_l.infra_db.entities.LastRecord model);
     public abstract io.github._127_0_0_l.infra_db.entities.LastRecord toDBLastRecord (LastRecord model);
+
+    public NewRecordsCountLog toCoreNewRecordsCountLog (io.github._127_0_0_l.infra_db.entities.NewRecordsCountLog model) {
+        return new NewRecordsCountLog(model.getDateTime(), model.getContentSource().getId(), model.getRecordsCount());
+    }
+    
+    public abstract List<NewRecordsCountLog> toCoreNewRecordsCountLogs (List<io.github._127_0_0_l.infra_db.entities.NewRecordsCountLog> model);
+    @Mapping(source = "newRecordsCount", target = "recordsCount")
+    @Mapping(source = "contentSourceId", target = "contentSource")
+    public abstract io.github._127_0_0_l.infra_db.entities.NewRecordsCountLog toDBNewRecordsCountLog (NewRecordsCountLog model);
 }

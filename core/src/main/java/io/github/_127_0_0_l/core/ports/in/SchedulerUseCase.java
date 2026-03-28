@@ -1,10 +1,11 @@
 package io.github._127_0_0_l.core.ports.in;
 
-import io.github._127_0_0_l.core.models.NewAdvertLog;
-import io.github._127_0_0_l.core.models.ContentSource;
+import io.github._127_0_0_l.core.models.NewRecordsCountLog;
 
-import java.util.List;
+import java.util.Optional;
 
 public interface SchedulerUseCase {
-    List<NewAdvertLog> runFetchAndNotify(ContentSource source);
+    Optional<NewRecordsCountLog> runFetchAndNotify(Long contentSourceId);
+
+    void saveNewRecordsCountLog(NewRecordsCountLog model);
 }

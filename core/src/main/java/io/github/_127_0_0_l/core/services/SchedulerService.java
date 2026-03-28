@@ -13,6 +13,6 @@ public class SchedulerService {
     }
 
     public void runScheduler(){
-        schedulerPort.ScheduleFetchAndNotify(Long.valueOf(1));
+        schedulerPort.scheduleFetchAndNotify(Long.valueOf(1));
     }
 }

@@ -14,7 +14,7 @@ public class SchedulerAdapter implements SchedulerPort {
     }
 
     @Override
-    public void ScheduleFetchAndNotify(Long contentSourceId) {
+    public void scheduleFetchAndNotify(Long contentSourceId) {
         scheduler.schedule(contentSourceId);
     }
     
