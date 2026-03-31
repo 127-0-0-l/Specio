@@ -2,14 +2,13 @@ package io.github._127_0_0_l.infra_scheduler.adapters.in;
 
 import java.util.Optional;
 
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import io.github._127_0_0_l.infra_scheduler.interfaces.SchedulerMapper;
-import io.github._127_0_0_l.infra_scheduler.models.NewRecordsCountLog;
 import io.github._127_0_0_l.infra_scheduler.models.NewRecordsCountLogDTO;
 import io.github._127_0_0_l.core.ports.in.SchedulerUseCase;
 
-@Component
+@Service
 public class SchedulerUseCaseService {
     private final SchedulerUseCase schedulerUseCase;
     private final SchedulerMapper mapper;
@@ -28,9 +27,5 @@ public class SchedulerUseCaseService {
         } else {
             return Optional.empty();
         }
-    }
-
-    public void saveNewRecordsCountLog(NewRecordsCountLog model){
-        schedulerUseCase.saveNewRecordsCountLog(mapper.toCoreNewRecordsCountLog(model));
     }
 }

@@ -8,6 +8,7 @@ import java.util.Map;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
 
+import io.github._127_0_0_l.infra_scheduler.adapters.in.NewRecordsCountLogService;
 import io.github._127_0_0_l.infra_scheduler.adapters.in.SchedulerUseCaseService;
 import io.github._127_0_0_l.infra_scheduler.interfaces.DateTimeService;
 import io.github._127_0_0_l.infra_scheduler.interfaces.FetchAndNotifyScheduler;
@@ -20,16 +21,20 @@ import lombok.extern.slf4j.Slf4j;
 public class FetchAndNotifySchedulerService implements FetchAndNotifyScheduler {
     private final TaskScheduler taskScheduler;
     private final SchedulerUseCaseService schedulerUseCaseService;
+    private final NewRecordsCountLogService nrclService;
     private final DateTimeService dateTimeService;
     private int interval = 120;
     private final int MAX_RECORDS_COUNT = 25;
     private Map<Long, LocalDateTime> sourceToLastRunTime = new HashMap<>();
 
-    public FetchAndNotifySchedulerService (TaskScheduler taskScheduler,
+    public FetchAndNotifySchedulerService (
+            TaskScheduler taskScheduler,
             SchedulerUseCaseService schedulerUseCaseService,
+            NewRecordsCountLogService nrclService,
             DateTimeService dateTimeService){
         this.taskScheduler = taskScheduler;
         this.schedulerUseCaseService = schedulerUseCaseService;
+        this.nrclService = nrclService;
         this.dateTimeService = dateTimeService;
     }
 
@@ -51,7 +56,7 @@ public class FetchAndNotifySchedulerService implements FetchAndNotifyScheduler {
                 sourceToLastRunTime.put(sourceId, result.get().dateTime());
             }
 
-            schedule(sourceId, calculateNextTime());
+            schedule(sourceId, calculateNextTime(sourceId, sourceToLastRunTime.get(sourceId)));
             log.info("schedule task for " + interval + " secconds");
         }, nextRunTime);
     }
@@ -68,10 +73,19 @@ public class FetchAndNotifySchedulerService implements FetchAndNotifyScheduler {
             dateTimeService.getSecsFromFirstWeekDay(lastRun),
             dateTimeService.getSecsFromFirstWeekDay(nrcl.dateTime()),
             nrcl.newRecordsCount());
-        schedulerUseCaseService.saveNewRecordsCountLog(log);
+        nrclService.saveNewRecordsCountLog(log);
     }
     
-    private Instant calculateNextTime(){
-        return Instant.now().plusSeconds(interval);
+    private Instant calculateNextTime(Long sourceId, LocalDateTime lastTunTime){
+        var prediction = dateTimeService.calculateNextRunTime(sourceId, lastTunTime);
+        int seconds;
+
+        if (prediction.isPresent()){
+            seconds = (interval + prediction.get() / 2);
+        } else {
+            seconds = interval;
+        }
+
+        return Instant.now().plusSeconds(seconds);
     }
 }
