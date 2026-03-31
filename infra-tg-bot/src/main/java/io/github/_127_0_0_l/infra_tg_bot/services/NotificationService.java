@@ -46,10 +46,17 @@ public class NotificationService implements io.github._127_0_0_l.infra_tg_bot.in
 
         String text =  sb.toString().replaceAll("([_\\[\\]()~`>#+\\-=|{}.!])", "\\\\$1");
 
+        var replyMarkupBuilder = ReplyKeyboardMarkup.builder();
+        var row = new KeyboardRow();
+        row.add("stop");
+        replyMarkupBuilder = replyMarkupBuilder.keyboardRow(row);
+        ReplyKeyboardMarkup markup = replyMarkupBuilder.resizeKeyboard(true).build();
+
         SendMessage message = SendMessage.builder()
                 .chatId(chatId)
                 .parseMode("MarkdownV2")
                 .text(text)
+                .replyMarkup(markup)
                 .build();
 
         return notify(message);
