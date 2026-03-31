@@ -59,7 +59,7 @@ public class HtmlParserService implements HtmlParser {
             String name = (String) rawItem.get("name");
             String description = (String) rawItem.get("description");
             String params = (String) rawItem.get("params");
-            String city = "";
+            String city = (String) rawItem.get("city");
             String link = (String) rawItem.get("url");
             int pricePrimary = parsePrice((String) rawItem.get("price"));
             int priceSecondary = 0;
