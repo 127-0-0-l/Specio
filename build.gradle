@@ -7,7 +7,6 @@ allprojects {
     apply plugin: 'java'
 
     group = 'io.github._127_0_0_l'
-    version = '1.0.0'
 
     repositories {
         mavenCentral()
