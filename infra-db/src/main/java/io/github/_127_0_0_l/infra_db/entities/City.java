@@ -13,6 +13,11 @@ public class City {
     private Long id;
 
     @Setter
+    @ManyToOne
+    @JoinColumn(name = "region_id", referencedColumnName = "id", nullable = false)
+    private Region region;
+
+    @Setter
     @Column(unique = true, nullable = false)
     private String name;
 

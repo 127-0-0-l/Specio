@@ -1,5 +1,7 @@
 package io.github._127_0_0_l.infra_db.entities;
 
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,6 +17,10 @@ public class Region {
     @Setter
     @Column(unique = true, nullable = false)
     private String name;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "region_id")
+    private List<City> cities;
 
     public Region (String name){
         id = null;
