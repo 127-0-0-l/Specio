@@ -12,6 +12,7 @@ public class VehicleAdvertFilterService implements VehicleAdvertFilter {
     @Override
     public List<VehicleAdvert> filter(List<VehicleAdvert> adverts, Filters filters) {
         var stream = adverts.stream()
+				.filter(a -> filters.cities().contains(a.city()))
                 .filter(a -> a.pricePrimary() >= filters.priceFrom()
                         && a.pricePrimary() <= filters.priceTo())
                 .filter(a -> a.year() >= filters.yearFrom()
