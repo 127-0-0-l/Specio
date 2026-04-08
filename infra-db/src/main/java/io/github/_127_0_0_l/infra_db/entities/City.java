@@ -13,9 +13,8 @@ public class City {
     private Long id;
 
     @Setter
-    @ManyToOne
-    @JoinColumn(name = "region_id", referencedColumnName = "id", nullable = false)
-    private Region region;
+    @Column(name = "region_id", nullable = false)
+    private Long regionId;
 
     @Setter
     @Column(unique = true, nullable = false)
