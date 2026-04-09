@@ -23,6 +23,8 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
     private final List<City> cities;
     private final TgChatPort tgChatPort;
     private final TgBotMapper mapper;
+    private final int PAGINATION_SIZE = 5;
+    private final int PAGE_SIZE = 10;
 
     public UpdateHandler(NotificationService notificationService,
         TgChatPort tgChatPort,
@@ -402,9 +404,14 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
     private void goToCities (long chatId, String text, String message, boolean isUpdate) {
         var chat = mapper.toBotChat(tgChatPort.get(chatId).orElseThrow());
         List<Queue<ChatInlineButton>> buttons = new ArrayList<>();
+        List<City> currentCities = chat.getFilters().getRegions().stream()
+            .flatMap(r -> r.cities().stream())
+            .toList();
 
-        if (isUpdate){
-            Optional<City> city = cities.stream().filter(c -> c.name().equals(text)).findFirst();
+        boolean isDigit = text.matches("\\d+");
+
+        if (isUpdate && !isDigit){
+            Optional<City> city = currentCities.stream().filter(c -> c.name().equals(text)).findFirst();
             if (city.isPresent()){
                 chat.getFilters().toggleCity(city.get());
                 tgChatPort.update(mapper.toCoreTgChat(chat));
@@ -414,7 +421,22 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
             }
         }
 
-        for (City city : cities){
+        Queue<ChatInlineButton> pagination;
+        int totalPages = currentCities.size() / PAGE_SIZE + ((currentCities.size() % PAGE_SIZE) > 0 ? 1 : 0);
+        int currentPage;
+        if (isUpdate){
+            if (isDigit){
+                currentPage = Integer.parseInt(text);
+            } else {
+                int currentItem = currentCities.indexOf(currentCities.stream().filter(c -> c.name().equals(text)).findFirst().get());
+                currentPage = currentItem / PAGE_SIZE + ((currentItem % PAGE_SIZE) > 0 ? 1 : 0);
+            }
+        } else {
+            currentPage = 1;
+        }
+        pagination = getPagination(totalPages, currentPage);
+
+        for (City city : currentCities.stream().skip((currentPage - 1) * PAGE_SIZE).limit(PAGE_SIZE).toList()){
             Queue<ChatInlineButton> row = new LinkedList<>();
             row.add(new ChatInlineButton(
                     (chat.getFilters().getCities().contains(city) ? "🟢 " : "⭕️ ") + city.name(),
@@ -423,6 +445,8 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
         }
         Queue<ChatInlineButton> row = new LinkedList<>();
         row.add(new ChatInlineButton("submit", "submit"));
+
+        buttons.add(pagination);
         buttons.add(row);
 
         if (isUpdate){
@@ -434,6 +458,33 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
         }
 
         tgChatPort.update(mapper.toCoreTgChat(chat));
+    }
+
+    private Queue<ChatInlineButton> getPagination(int totalPages, int page){
+        Queue<ChatInlineButton> pagination = new LinkedList<>();
+        int firstPage = totalPages <= PAGINATION_SIZE ? 1 : page - (PAGINATION_SIZE / 2 + Math.abs(PAGINATION_SIZE / 2 - (totalPages - page)));
+        int lastPage = totalPages <= PAGINATION_SIZE ? totalPages : firstPage + PAGINATION_SIZE - 1;
+
+        for (int i = firstPage; i <= lastPage; i++){
+            if (i == page){
+                pagination.add(new ChatInlineButton("[" + i + "]", String.valueOf(i)));
+                continue;
+            }
+
+            if (i == firstPage && firstPage != 1){
+                pagination.add(new ChatInlineButton("..." + i, String.valueOf(i)));
+                continue;
+            }
+
+            if (i == lastPage && lastPage != totalPages){
+                pagination.add(new ChatInlineButton(i + "...", String.valueOf(i)));
+                continue;
+            }
+
+            pagination.add(new ChatInlineButton(String.valueOf(i), String.valueOf(i)));
+        }
+
+        return pagination;
     }
 
     private void goToPriceOptions (long chatId, String message) {
