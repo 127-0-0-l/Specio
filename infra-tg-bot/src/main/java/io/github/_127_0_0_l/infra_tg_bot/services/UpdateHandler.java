@@ -462,8 +462,20 @@ public class UpdateHandler implements LongPollingUpdateConsumer {
 
     private Queue<ChatInlineButton> getPagination(int totalPages, int page){
         Queue<ChatInlineButton> pagination = new LinkedList<>();
-        int firstPage = totalPages <= PAGINATION_SIZE ? 1 : page - (PAGINATION_SIZE / 2 + Math.abs(PAGINATION_SIZE / 2 - (totalPages - page)));
-        int lastPage = totalPages <= PAGINATION_SIZE ? totalPages : firstPage + PAGINATION_SIZE - 1;
+        int firstPage = 1;
+        int lastPage = Math.min(5, totalPages);
+        boolean shifted = false;
+        while (!shifted){
+            if (lastPage < totalPages && page - 2 > firstPage){
+                firstPage++;
+                lastPage++;
+                if (page - 2 == firstPage)
+                    shifted = true;
+                continue;
+            } else {
+                shifted = true;
+            }
+        }
 
         for (int i = firstPage; i <= lastPage; i++){
             if (i == page){
