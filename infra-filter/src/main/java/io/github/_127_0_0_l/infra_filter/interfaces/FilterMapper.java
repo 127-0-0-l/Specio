@@ -22,4 +22,9 @@ public interface FilterMapper {
     default String cityToString (City model) {
         return model.name();
     }
+
+    io.github._127_0_0_l.infra_filter.models.City toFilterCity(City model);
+
+    List<io.github._127_0_0_l.infra_filter.models.Region> toFilterRegions(List<Region> model);
+    List<io.github._127_0_0_l.infra_filter.models.City> toFilterCities(List<City> model);
 }

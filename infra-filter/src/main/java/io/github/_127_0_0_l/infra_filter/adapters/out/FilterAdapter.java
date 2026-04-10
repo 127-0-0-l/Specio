@@ -32,14 +32,9 @@ public class FilterAdapter implements FilterPort {
 
     @Override
     public List<VehicleAdvert> filterVehicleAdverts(List<VehicleAdvert> adverts, String lastRecordIdentifier) {
-        var lastRecord = adverts.stream()
-            .filter(a -> a.url().equals(lastRecordIdentifier))
-            .findFirst();
-
-        if (lastRecord.isPresent()){
-            return adverts.subList(0, adverts.indexOf(lastRecord.get()));
-        } else {
-            return adverts;
-        }
+        var filterAdverts = mapper.toFilterVehicleAdverts(adverts);
+        
+        var result = vehicleAdvertFilter.filter(filterAdverts, lastRecordIdentifier);
+        return mapper.toCoreVehicleAdverts(result);
     }
 }

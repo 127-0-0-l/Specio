@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface VehicleAdvertFilter {
     List<VehicleAdvert> filter (List<VehicleAdvert> adverts, Filters filters);
+
+    List<VehicleAdvert> filter (List<VehicleAdvert> adverts, String lastRecordIdentifier);
 }
