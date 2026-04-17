@@ -23,7 +23,7 @@ public class FetchAndNotifySchedulerService implements FetchAndNotifyScheduler {
     private final SchedulerUseCaseService schedulerUseCaseService;
     private final NewRecordsCountLogService nrclService;
     private final DateTimeService dateTimeService;
-    private int interval = 120;
+    private final int INIT_INTERVAL = 120;
     private final int MAX_RECORDS_COUNT = 25;
     private Map<Long, LocalDateTime> sourceToLastRunTime = new HashMap<>();
 
@@ -46,23 +46,23 @@ public class FetchAndNotifySchedulerService implements FetchAndNotifyScheduler {
     private void schedule(Long sourceId, Instant nextRunTime){
         taskScheduler.schedule(() -> {
             var result = schedulerUseCaseService.runFetchAndNotify(sourceId);
+            Instant scheduleTime;
 
             if (result.isPresent()){
-                updateInterval(result.get());
-                if (result.get().newRecordsCount() < MAX_RECORDS_COUNT &&
+                int newRecordsCount = result.get().newRecordsCount();
+                if (newRecordsCount < MAX_RECORDS_COUNT &&
                         sourceToLastRunTime.containsKey(sourceId)){
                     saveNewRecordsCountLog(result.get(), sourceId);
                 }
                 sourceToLastRunTime.put(sourceId, result.get().dateTime());
+                scheduleTime = calculateNextTime(sourceId, sourceToLastRunTime.get(sourceId), newRecordsCount);
+            } else {
+                scheduleTime = Instant.now().plusSeconds(INIT_INTERVAL);
             }
 
-            schedule(sourceId, calculateNextTime(sourceId, sourceToLastRunTime.get(sourceId)));
-            log.info("schedule task for " + interval + " secconds");
+            schedule(sourceId, scheduleTime);
+            log.info("schedule task for " + dateTimeService.getDiffInSecs(Instant.now(), scheduleTime) + " secconds");
         }, nextRunTime);
-    }
-
-    private void updateInterval(NewRecordsCountLogDTO nrcl){
-        interval += interval * (MAX_RECORDS_COUNT / 3 - nrcl.newRecordsCount()) / MAX_RECORDS_COUNT;
     }
 
     private void saveNewRecordsCountLog(NewRecordsCountLogDTO nrcl, Long sourceId){
@@ -76,15 +76,23 @@ public class FetchAndNotifySchedulerService implements FetchAndNotifyScheduler {
         nrclService.saveNewRecordsCountLog(log);
     }
     
-    private Instant calculateNextTime(Long sourceId, LocalDateTime lastTunTime){
-        var prediction = dateTimeService.calculateNextRunTime(sourceId, lastTunTime);
+    private Instant calculateNextTime(Long sourceId, LocalDateTime lastRunTime, int newRecordsCount){
+        if (lastRunTime == null){
+            return Instant.now().plusSeconds(INIT_INTERVAL);
+        }
+
+        int lastInterval = dateTimeService.getDiffInSecs(lastRunTime, LocalDateTime.now());
+        int localPrediction = lastInterval + lastInterval * (MAX_RECORDS_COUNT / 3 - newRecordsCount) / MAX_RECORDS_COUNT;
+        var prediction = dateTimeService.calculateNextRunTime(sourceId, lastRunTime);
         int seconds;
 
         if (prediction.isPresent()){
-            seconds = (interval + prediction.get() / 2);
+            seconds = (localPrediction + prediction.get()) / 2;
         } else {
-            seconds = interval;
+            seconds = localPrediction;
         }
+
+        seconds = Math.max(seconds, 5);
 
         return Instant.now().plusSeconds(seconds);
     }

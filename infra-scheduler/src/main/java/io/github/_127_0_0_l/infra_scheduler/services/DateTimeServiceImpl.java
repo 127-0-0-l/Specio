@@ -4,6 +4,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +38,12 @@ public class DateTimeServiceImpl implements DateTimeService {
 
     @Override
     public int getSecsFromFirstWeekDay(LocalDateTime dateTime) {
-        return Math.abs((int)ChronoUnit.SECONDS.between(dateTime, getFirstWeekDay(dateTime).atStartOfDay()));
+        return getDiffInSecs(dateTime, getFirstWeekDay(dateTime).atStartOfDay());
+    }
+
+    @Override
+    public int getDiffInSecs (Temporal from, Temporal to) {
+        return Math.abs((int)ChronoUnit.SECONDS.between(from, to));
     }
 
     @Override
